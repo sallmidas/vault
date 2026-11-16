@@ -233,3 +233,11 @@ body.is-card .vnav { position: sticky; background: rgba(7,8,11,.94); border-bott
 a.wall-item { color: inherit; text-decoration: none; }
 a.wall-item:hover { border-color: rgba(243,208,137,0.45); }
 .wall-item picture { display: block; }
+
+/* claim codes */
+.vfield input.code-input { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; letter-spacing: 0.16em; font-size: 1.05rem; text-transform: uppercase; }
+.vfield input.code-input::placeholder { letter-spacing: 0.12em; }
+.linkish { background: none; border: 0; padding: 0.2rem 0; margin: -0.2rem 0 0.7rem; color: var(--gold); font: inherit; font-size: 0.82rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 2.75rem; }
+.linkish:hover { color: var(--gold-bright); }
+.linkish:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+.claim-badge.is-founder { border-color: rgba(243, 208, 137, 0.55); color: var(--gold-bright); background: linear-gradient(180deg, rgba(243,208,137,0.12), rgba(243,208,137,0.04)); }

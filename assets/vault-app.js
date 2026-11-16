@@ -281,23 +281,69 @@
 
   function renderClaimForm(box, cardNo, opts) {
     var info = cardNo ? cardInfo(cardNo) : null;
+    var founder = !!(opts && opts.founder);
+    var mode = "code";
     box.innerHTML =
-      '<h2>' + (cardNo ? "Claim Card No. " + cardNo : "Claim a card") + '</h2>' +
-      '<p>Your eBay order number is your key. It\'s printed on your card' + (cardNo ? "" : " next to the card number") + '. We check it privately and never show it to anyone.</p>' +
+      '<h2>' + (founder ? "Founder claim · No. " + cardNo : cardNo ? "Claim Card No. " + cardNo : "Claim a card") + '</h2>' +
+      '<p class="c-intro"></p>' +
       '<form class="vform" novalidate>' +
         (cardNo ? "" : '<div class="vfield"><label for="c-no">Card number</label><input id="c-no" inputmode="numeric" maxlength="3" placeholder="013" required value="' + esc(opts.prefill || "") + '"></div>') +
-        '<div class="vfield"><label for="c-key">Order number</label><input id="c-key" inputmode="numeric" autocomplete="off" spellcheck="false" maxlength="24" placeholder="12-34567-89012" required>' +
-        '<p class="help">Claiming as <strong>@' + esc(state.profile.handle) + '</strong>. One card, one collector, forever.</p></div>' +
-        '<button class="btn btn-primary" type="submit">Claim' + (info ? " " + esc(info.name) : " this card") + '</button>' +
+        '<div class="vfield"><label for="c-key" id="c-key-label">Claim code</label>' +
+        '<input id="c-key" class="code-input" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" required aria-describedby="c-key-help">' +
+        '<p class="help" id="c-key-help"></p></div>' +
+        (founder ? "" : '<button class="linkish c-switch" type="button" aria-controls="c-key"></button>') +
+        '<p class="help">Claiming as <strong>@' + esc(state.profile.handle) + '</strong>. One card, one collector, forever.</p>' +
+        '<button class="btn btn-primary" type="submit">' + (founder ? "Make the Founder claim" : "Claim" + (info ? " " + esc(info.name) : " this card")) + '</button>' +
         '<p class="vstatus" role="status" aria-live="polite"></p>' +
       '</form>';
     var f = $("form", box), st = $(".vstatus", f), btn = $('button[type="submit"]', f);
+    var inp = $("#c-key", box), lab = $("#c-key-label", box), help = $("#c-key-help", box), intro = $(".c-intro", box), sw = $(".c-switch", box);
+    function setMode(m) {
+      mode = m;
+      setStatus(st, "", "");
+      inp.value = "";
+      if (m === "code") {
+        lab.textContent = founder ? "Founder code" : "Claim code";
+        inp.placeholder = "VS-XXXX-XX"; inp.setAttribute("inputmode", "text"); inp.setAttribute("autocapitalize", "characters");
+        help.textContent = founder ? "The private Founder code held by The Vaulted Shelf." : "Under the scratch-off on the claim insert that came with your card.";
+        intro.textContent = founder
+          ? "This Founder's card is reserved. It's claimed once, with the private Founder code."
+          : "Your private claim code is the key. It's on the sealed insert in your card sleeve, never on the card or in any photo. We check it privately.";
+        if (sw) sw.textContent = "No claim code? Use your eBay order number";
+      } else {
+        lab.textContent = "eBay order number";
+        inp.placeholder = "12-34567-89012"; inp.setAttribute("inputmode", "numeric"); inp.removeAttribute("autocapitalize");
+        help.textContent = "For cards that shipped before claim codes. Find it in your eBay purchase history.";
+        intro.textContent = "No insert in your sleeve? Cards that shipped before claim codes unlock with the eBay order number. We check it privately and never show it to anyone.";
+        if (sw) sw.textContent = "Have a claim code? Use it instead";
+      }
+    }
+    setMode("code");
+    if (sw) sw.addEventListener("click", function () { setMode(mode === "code" ? "order" : "code"); inp.focus(); });
+    // Codes are VS + 6 characters. Normalize by length so a code whose body starts with "VS" still works.
+    function tidyCode() {
+      if (mode !== "code") return;
+      var raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      var body = raw.length === 8 && raw.indexOf("VS") === 0 ? raw.slice(2) : raw.length === 6 ? raw : null;
+      if (body) inp.value = "VS-" + body.slice(0, 4) + "-" + body.slice(4);
+    }
+    inp.addEventListener("input", function () {
+      if (st.textContent) setStatus(st, "", "");
+      if (mode !== "code") return;
+      var up = inp.value.toUpperCase();
+      if (up !== inp.value) { var pos = inp.selectionStart; inp.value = up; try { inp.setSelectionRange(pos, pos); } catch (e) {} }
+    });
+    inp.addEventListener("blur", tidyCode);
     f.addEventListener("submit", function (e) {
       e.preventDefault();
       var no = cardNo || normNo($("#c-no", box).value);
-      var key = $("#c-key", box).value.trim();
+      tidyCode();
+      var key = inp.value.trim();
       if (!no) { setStatus(st, "Enter the 3-digit card number.", "is-error"); return; }
-      if (key.replace(/\D/g, "").length < 8 && key.replace(/[\s-]/g, "").length < 6) { setStatus(st, "Enter the order number printed on your card.", "is-error"); $("#c-key", box).focus(); return; }
+      if (mode === "code" && !/^VS-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/.test(key)) {
+        setStatus(st, /[01OIL]/.test(key.replace(/^VS-?/, "")) ? "Claim codes never use 0, O, 1, I or L. Check the letters on your insert." : "Enter the full code, like VS-XXXX-XX.", "is-error"); inp.focus(); return;
+      }
+      if (mode === "order" && key.replace(/\D/g, "").length < 8) { setStatus(st, "Enter your full eBay order number.", "is-error"); inp.focus(); return; }
       busy(btn, true, "Unlocking…");
       rpc("claim_card_account", { card_no: no, order_key: key }).then(function (r) {
         busy(btn, false);
@@ -384,10 +430,14 @@
         }
         return;
       }
-      badge.className = "claim-badge";
-      badge.innerHTML = VAULT_SVG + "<span>Unclaimed — waiting in the vault</span>";
+      var founder = d.awaits_founder === true;
+      badge.className = "claim-badge" + (founder ? " is-founder" : "");
+      badge.innerHTML = VAULT_SVG + "<span>" + (founder ? "Unclaimed — awaiting the Founder claim" : "Unclaimed — waiting in the vault") + "</span>";
       claimBox.hidden = false;
-      claimFlow(claimBox, { cardNo: no, signInNote: "Bought this card? Sign in with your email, pick a handle, and unlock it with your order number.", onClaimed: load });
+      claimFlow(claimBox, { cardNo: no, founder: founder,
+        signInNote: founder ? "This Founder's card is reserved for the Founder claim. It unlocks once, with the private Founder code."
+                            : "Got this card? Sign in with your email, pick a handle, and unlock it with the claim code from your insert.",
+        onClaimed: load });
     }
     function load() {
       rpc("card_page", { card_no: no }).then(paint).catch(function () {
@@ -544,7 +594,7 @@
         (cards.length ? '<ul class="cgrid">' + cards.map(function (c) {
           var info = cardInfo(c.card_no);
           return '<li class="ctile"><a href="' + cardUrl(c.card_no) + '"><div class="thumb">' + cardThumb(c.card_no, info) + '</div><div class="meta"><div class="no">No. ' + esc(c.card_no) + '</div><div class="nm">' + esc(c.character) + '</div><div class="st is-claimed">Claimed ' + esc(fmtDate(c.claimed_at)) + '</div></div></a></li>';
-        }).join("") + '</ul>' : '<div class="empty-state"><strong>Your vault is empty</strong>Claim your first card below with the order number printed on it.</div>') +
+        }).join("") + '</ul>' : '<div class="empty-state"><strong>Your vault is empty</strong>Claim your first card below with the code from your claim insert.</div>') +
       '</section>' +
       '<section class="vpanel" id="mv-claim" style="margin-top:1.2rem"></section>' +
       '<section class="vpanel" aria-labelledby="mv-founder"><h2 id="mv-founder">Founder\'s Collection</h2>' +
