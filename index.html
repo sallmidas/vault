@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#08090c">
+  <meta name="theme-color" content="#07080b">
   <meta name="description" content="The Vaulted Shelf — One Key · One Vault. Funko Pops and collectibles. Vault Collector Cards are one-of-one keys to fan rewards, coming soon.">
   <title>The Vaulted Shelf</title>
   <link rel="canonical" href="https://sallmidas.github.io/vault/">
@@ -14,10 +14,12 @@
   <meta property="og:description" content="One Key · One Vault. Funko Pops and collectibles.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sallmidas.github.io/vault/">
-  <meta property="og:image" content="https://sallmidas.github.io/vault/assets/plaque-700.jpg">
+  <meta property="og:image" content="https://sallmidas.github.io/vault/assets/hero-desktop.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" type="image/webp" href="assets/hero-desktop.webp" imagesrcset="assets/hero-desktop-1280.webp 1280w, assets/hero-desktop.webp 1920w" imagesizes="100vw" media="(min-width: 720px)">
+  <link rel="preload" as="image" type="image/webp" href="assets/hero-mobile.webp" imagesrcset="assets/hero-mobile-720.webp 720w, assets/hero-mobile.webp 1080w" imagesizes="100vw" media="(max-width: 719px)">
 
   <!--
     ============================================================
@@ -33,37 +35,63 @@
       ebayShopUrl: "https://www.ebay.com/sch/i.html?_ssn=the-vaulted-shelf",
 
       // This GitHub Pages site
-      siteUrl: "https://sallmidas.github.io/vault/"
+      siteUrl: "https://sallmidas.github.io/vault/",
+
+      // MailerLite "Join the Vault" embedded form
+      // Signups go to the Vault Collectors group (id 204299272903984534).
+      // The official widget stays unused so the section can match this page.
+      // Submissions post to MailerLite's public form endpoint (no API key).
+      mailerlite: {
+        accountId: "2800161",
+        formId: "204299279951463505",
+        formSlug: "XyOnLG",
+        subscribeUrl: "https://assets.mailerlite.com/jsonp/2800161/forms/204299279951463505/subscribe"
+      },
+
+      // Public by design (anon / publishable key). Never put the service role key here.
+      supabase: {
+        url: "https://yzfhecjvuorvvsrfoktt.supabase.co",
+        anonKey: "sb_publishable_mJYL7HRJypKvKykN2ZNtHw_Wi7mmOW9"
+      },
+
+      // Per-card claim reveal clips. Cards not listed use the CSS door fallback.
+      reveals: {
+        "002": {
+          mp4: "assets/reveals/002.mp4",
+          webm: "assets/reveals/002.webm",
+          poster: "assets/reveals/002-poster.jpg"
+        }
+      }
     };
   </script>
 
   <style>
     :root {
-      --bg: #08090c;
+      --bg: #07080b;
       --bg-raise: #101215;
-      --bg-panel: rgba(16, 18, 22, 0.88);
       --steel: #2a3036;
       --steel-lite: #4a525c;
       --gold: #f3d089;
       --gold-bright: #ffe6a8;
       --gold-mid: #d4af37;
-      --gold-deep: #b8893a;
+      --gold-deep: #c49a4a;
       --gold-ink: #140e06;
       --ink: #f4efe4;
-      --muted: #b7b0a2;
-      --dim: #8a8478;
+      --muted: #c9c2b4;
+      --dim: #a39c90;
       --line: rgba(243, 208, 137, 0.32);
       --line-strong: rgba(243, 208, 137, 0.55);
       --glow: rgba(243, 208, 137, 0.22);
       --font-display: "Cinzel", Palatino, "Times New Roman", serif;
       --font-flourish: "Cormorant Garamond", Palatino, Georgia, serif;
-      --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-      --max: 40rem;
+      --font-body: "Outfit", "Segoe UI", system-ui, sans-serif;
+      --max: 42rem;
       --pad: 1.35rem;
+      --radius-panel: 1.15rem;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
     html, body {
       background: var(--bg);
       color: var(--ink);
@@ -76,44 +104,29 @@
     body {
       min-height: 100vh;
       min-height: 100dvh;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(184, 137, 58, 0.10), transparent 60%),
-        radial-gradient(circle at 50% 180px, rgba(243, 208, 137, 0.05), transparent 42%),
-        var(--bg);
+      overflow-x: hidden;
     }
     img { display: block; max-width: 100%; height: auto; }
     a { color: var(--gold); }
-    a:focus-visible, button:focus-visible {
+    a:focus-visible, button:focus-visible, input:focus-visible {
       outline: 2px solid var(--gold-bright);
       outline-offset: 3px;
     }
 
-    /* Faint giant vault rings behind the hero */
-    .rings {
+    .grain {
       pointer-events: none;
-      position: absolute;
-      inset: -10% 50%;
-      width: min(140vw, 52rem);
-      height: min(140vw, 52rem);
-      transform: translate(-50%, -8%);
-      border-radius: 50%;
-      background:
-        repeating-radial-gradient(
-          circle at center,
-          transparent 0,
-          transparent 38px,
-          rgba(243, 208, 137, 0.045) 39px,
-          rgba(243, 208, 137, 0.045) 40px
-        );
-      mask-image: radial-gradient(circle at center, #000 0%, transparent 72%);
-      -webkit-mask-image: radial-gradient(circle at center, #000 0%, transparent 72%);
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      opacity: 0.055;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
     }
 
     .wrap {
       position: relative;
       width: min(100%, var(--max));
       margin: 0 auto;
-      padding: 0 var(--pad);
       padding-left: max(var(--pad), env(safe-area-inset-left));
       padding-right: max(var(--pad), env(safe-area-inset-right));
     }
@@ -121,102 +134,316 @@
     /* ---------- Hero ---------- */
     .hero {
       position: relative;
+      isolation: isolate;
       overflow: hidden;
-      padding-top: max(2.25rem, env(safe-area-inset-top));
-      padding-bottom: 2.25rem;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      align-items: end;
+      color: var(--ink);
+    }
+    .hero-art {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    .hero-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 42%;
+    }
+    .hero-shade {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(7, 8, 11, 0.28) 0%, rgba(7, 8, 11, 0.08) 32%, rgba(7, 8, 11, 0.35) 58%, rgba(7, 8, 11, 0.92) 100%),
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(184, 137, 58, 0.16), transparent 60%);
+    }
+    .hero-glow {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+      width: 55%;
+      height: 70%;
+      right: -4%;
+      top: 12%;
+      background: radial-gradient(circle at 40% 50%, rgba(243, 208, 137, 0.20), transparent 62%);
+      animation: pulse-glow 6.5s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.55; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.06); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: min(100%, 40rem);
+      margin: 0 auto;
+      padding: 0 max(var(--pad), env(safe-area-inset-left)) 2.4rem;
+      padding-right: max(var(--pad), env(safe-area-inset-right));
+      padding-bottom: max(2.4rem, env(safe-area-inset-bottom));
       text-align: center;
     }
-    .hero-rule {
-      width: min(16rem, 70%);
-      height: 1px;
-      margin: 0 auto 1.6rem;
-      background: linear-gradient(90deg, transparent, var(--gold-mid), transparent);
-      opacity: 0.7;
-    }
-    .logo {
-      margin: 0 auto 0.35rem;
+    .hero-kicker {
       font-family: var(--font-display);
-      font-weight: 500;
-      font-size: 1rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      text-shadow: 0 0 18px rgba(243, 208, 137, 0.25);
     }
+    .logo { margin: 0 auto 0.2rem; }
     .logo img {
       width: min(28.5rem, 100%);
       margin: 0 auto;
-      filter: drop-shadow(0 0 16px rgba(243, 208, 137, 0.18));
+      filter: drop-shadow(0 0 18px rgba(243, 208, 137, 0.35));
       background: transparent;
-      mix-blend-mode: lighten;
     }
     .tagline {
-      margin: 0.15rem 0 0;
+      margin: 0.2rem 0 0;
       font-family: var(--font-flourish);
       font-style: italic;
       font-weight: 500;
-      font-size: clamp(1.35rem, 4.6vw, 1.85rem);
+      font-size: clamp(1.4rem, 5vw, 1.95rem);
       letter-spacing: 0.18em;
       color: var(--gold);
-      text-transform: none;
     }
-    .tagline-dots {
-      margin: 0 0.15em;
-      opacity: 0.8;
-    }
+    .tagline-dots { margin: 0 0.15em; opacity: 0.8; }
 
     .card-badge {
       display: none;
       width: max-content;
-      margin: 1.1rem auto 0;
-      padding: 0.45rem 1rem 0.4rem;
+      margin: 1.15rem auto 0;
+      padding: 0.5rem 1.15rem 0.45rem;
       border: 1px solid var(--line-strong);
       background:
-        linear-gradient(180deg, rgba(243, 208, 137, 0.10), rgba(20, 14, 6, 0.25));
+        linear-gradient(180deg, rgba(243, 208, 137, 0.16), rgba(20, 14, 6, 0.35));
       color: var(--gold-bright);
       font-family: var(--font-display);
       font-size: 0.78rem;
       font-weight: 600;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      box-shadow: 0 0 24px rgba(243, 208, 137, 0.12);
+      box-shadow: 0 0 28px rgba(243, 208, 137, 0.18), 0 0 0 1px rgba(0,0,0,0.4) inset;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
     .card-badge.is-on { display: inline-block; }
 
-    .motif {
-      position: relative;
-      width: min(22rem, 88%);
-      margin: 1.55rem auto 0;
+    .card-claim-hero {
+      display: none;
+      margin: 0.7rem auto 0;
+      max-width: 22rem;
+      font-family: var(--font-flourish);
+      font-style: italic;
+      font-size: 1.12rem;
+      color: var(--gold-bright);
+      line-height: 1.35;
     }
-    .motif svg {
-      width: 100%;
-      height: auto;
-      overflow: visible;
-      filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.55));
+    .card-claim-hero.is-on { display: block; }
+    .card-claim-hero a {
+      display: inline-block;
+      margin-top: 0.2rem;
+      font-family: var(--font-display);
+      font-style: normal;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-decoration: none;
+      border-bottom: 1px solid var(--line);
     }
-    .motif-glow {
-      animation: pulse-glow 5.5s ease-in-out infinite;
-      transform-origin: center;
+    .card-claim-hero a:hover { color: var(--gold-bright); }
+
+    .claim-panel .claim-character {
+      margin-top: 0.35rem;
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3.5vw, 1.45rem);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--gold-bright);
     }
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.55; }
-      50% { opacity: 1; }
+    .claim-panel .claim-edition {
+      margin-top: 0.25rem;
+      color: var(--dim);
+      font-size: 0.95rem;
     }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .motif-glow { animation: none; opacity: 0.85; }
+    .claim-by {
+      margin-top: 1.05rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.75rem;
+      background: rgba(8, 9, 12, 0.42);
+      color: var(--ink);
+      font-size: 1.05rem;
+      line-height: 1.45;
+    }
+    .claim-by strong {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--gold-bright);
+      letter-spacing: 0.03em;
+    }
+    .claim-by .when {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--dim);
+      font-size: 0.88rem;
+    }
+    .claim-panel[hidden],
+    .card-claim-hero[hidden],
+    #claim-form[hidden] { display: none !important; }
+
+    .hero-ctas {
+      display: grid;
+      gap: 0.7rem;
+      margin: 1.45rem auto 0;
+      width: min(100%, 22rem);
+    }
+    .forged {
+      margin-top: 1.15rem;
+      font-family: var(--font-display);
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .forged span { color: var(--gold-deep); }
+
+    .scroll-hint {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      bottom: max(0.7rem, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      display: none;
+      color: var(--gold);
+      text-decoration: none;
+      opacity: 0.75;
+    }
+    .scroll-hint svg { width: 22px; height: 22px; animation: bob 2.2s ease-in-out infinite; }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
     }
 
-    /* ---------- Sections ---------- */
-    main { padding-bottom: 2.5rem; }
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      min-height: 3.35rem;
+      padding: 0.8rem 1.15rem;
+      font-family: var(--font-display);
+      font-size: 0.84rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .btn svg { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; }
+    .btn-primary {
+      color: var(--gold-ink);
+      background: linear-gradient(180deg, #ffe6a8 0%, #e0b65a 42%, #b8893a 100%);
+      box-shadow:
+        0 1px 0 rgba(255, 230, 168, 0.55) inset,
+        0 10px 24px rgba(184, 137, 58, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.28) 50%, transparent 60%);
+      transform: translateX(-120%);
+      animation: sheen 5.5s ease-in-out 1.2s infinite;
+    }
+    @keyframes sheen {
+      0%, 70% { transform: translateX(-120%); }
+      85% { transform: translateX(120%); }
+      100% { transform: translateX(120%); }
+    }
+    .btn-primary:hover { filter: brightness(1.06); }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-ghost {
+      color: var(--gold-bright);
+      background: rgba(16, 14, 10, 0.62);
+      border: 1px solid rgba(243, 208, 137, 0.58);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28);
+    }
+    .btn-ghost:hover { background: rgba(243, 208, 137, 0.12); }
+
+    /* ---------- Main / panels ---------- */
+    main {
+      position: relative;
+      z-index: 2;
+      overflow-x: hidden;
+      padding: 1.1rem 0 3rem;
+      background:
+        radial-gradient(ellipse 70% 30% at 50% 0%, rgba(184, 137, 58, 0.10), transparent 55%),
+        var(--bg);
+    }
+    main::before {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      inset: -8% 50% auto;
+      width: min(140vw, 52rem);
+      height: min(140vw, 52rem);
+      transform: translate(-50%, -18%);
+      border-radius: 50%;
+      background:
+        repeating-radial-gradient(
+          circle at center,
+          transparent 0,
+          transparent 38px,
+          rgba(243, 208, 137, 0.04) 39px,
+          rgba(243, 208, 137, 0.04) 40px
+        );
+      mask-image: radial-gradient(circle at center, #000 0%, transparent 72%);
+      -webkit-mask-image: radial-gradient(circle at center, #000 0%, transparent 72%);
+    }
+
     .panel {
       position: relative;
       margin: 0 auto 1.15rem;
-      padding: 1.45rem 1.25rem 1.4rem;
+      padding: 1.55rem 1.3rem 1.5rem;
       background:
-        linear-gradient(180deg, rgba(28, 30, 36, 0.55), rgba(10, 11, 14, 0.92));
+        linear-gradient(180deg, rgba(28, 26, 22, 0.62), rgba(10, 11, 14, 0.78));
       border: 1px solid var(--line);
+      border-radius: var(--radius-panel);
       box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.4) inset,
-        0 16px 40px rgba(0, 0, 0, 0.28);
+        0 0 0 1px rgba(0, 0, 0, 0.45) inset,
+        0 18px 44px rgba(0, 0, 0, 0.32),
+        0 0 40px rgba(184, 137, 58, 0.05);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
     }
-    .panel-corners { pointer-events: none; position: absolute; inset: 7px; }
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 230, 168, 0.10), transparent 28%);
+    }
+    .panel-corners { pointer-events: none; position: absolute; inset: 9px; }
     .panel-corners span {
       position: absolute;
       width: 12px;
@@ -241,16 +468,13 @@
     h2 {
       font-family: var(--font-display);
       font-weight: 600;
-      font-size: clamp(1.35rem, 5vw, 1.65rem);
+      font-size: clamp(1.4rem, 5.2vw, 1.75rem);
       letter-spacing: 0.06em;
       color: var(--gold-bright);
       line-height: 1.25;
       margin-bottom: 0.7rem;
     }
-    .panel p {
-      color: var(--muted);
-      font-size: 1.02rem;
-    }
+    .panel p { color: var(--muted); font-size: 1.02rem; }
     .panel p + p { margin-top: 0.7rem; }
 
     .soon {
@@ -265,39 +489,41 @@
       letter-spacing: 0.18em;
       text-transform: uppercase;
       white-space: nowrap;
+      border-radius: 99px;
     }
 
     .rewards {
       list-style: none;
-      margin: 1.15rem 0 0;
+      margin: 1.2rem 0 0;
       display: grid;
       gap: 0.55rem;
     }
     .rewards li {
       display: grid;
-      grid-template-columns: 2.1rem 1fr;
+      grid-template-columns: 2.2rem 1fr;
       grid-template-areas:
         "ico name"
         "ico soon";
       align-items: center;
-      column-gap: 0.7rem;
+      column-gap: 0.75rem;
       row-gap: 0.2rem;
-      padding: 0.75rem 0.8rem;
-      background: rgba(8, 9, 12, 0.45);
+      padding: 0.8rem 0.85rem;
+      background: rgba(8, 9, 12, 0.42);
       border: 1px solid rgba(243, 208, 137, 0.16);
+      border-radius: 0.75rem;
     }
     .rewards .ico { grid-area: ico; }
     .rewards .name { grid-area: name; }
     .rewards .soon { grid-area: soon; justify-self: start; }
     .rewards li.capstone {
-      margin-top: 0.25rem;
+      margin-top: 0.2rem;
       border-color: var(--line-strong);
       background:
-        linear-gradient(90deg, rgba(243, 208, 137, 0.10), rgba(8, 9, 12, 0.3) 55%);
+        linear-gradient(90deg, rgba(243, 208, 137, 0.12), rgba(8, 9, 12, 0.3) 55%);
     }
     .rewards .ico {
-      width: 2.1rem;
-      height: 2.1rem;
+      width: 2.2rem;
+      height: 2.2rem;
       display: grid;
       place-items: center;
     }
@@ -315,8 +541,7 @@
     /* ---------- Shop ---------- */
     .shop {
       text-align: center;
-      padding-top: 1.6rem;
-      padding-bottom: 0.4rem;
+      padding: 1.8rem 0 0.5rem;
     }
     .shop h2 { margin-bottom: 1.1rem; }
     .btns {
@@ -326,40 +551,84 @@
       width: 100%;
       margin: 0 auto;
     }
-    .btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.65rem;
-      min-height: 3.4rem;
-      padding: 0.8rem 1.1rem;
-      font-family: var(--font-display);
-      font-size: 0.86rem;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      text-decoration: none;
-      border: 0;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-    }
-    .btn svg { width: 1.15rem; height: 1.15rem; flex: 0 0 auto; }
-    .btn-primary {
-      color: var(--gold-ink);
-      background: linear-gradient(180deg, #ffe6a8 0%, #e0b65a 42%, #b8893a 100%);
-      box-shadow:
-        0 1px 0 rgba(255, 230, 168, 0.55) inset,
-        0 10px 24px rgba(184, 137, 58, 0.28);
-    }
-    .btn-primary:hover { filter: brightness(1.06); }
-    .btn-primary:active { transform: translateY(1px); }
 
+    /* ---------- Join the Vault ---------- */
+    .join-form {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 1.15rem;
+    }
+    .join-field label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-deep);
+      margin-bottom: 0.4rem;
+    }
+    .join-field .hint {
+      font-family: var(--font-body);
+      font-size: 0.72rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: var(--dim);
+      margin-left: 0.35rem;
+    }
+    .join-field input {
+      width: 100%;
+      min-height: 3.15rem;
+      padding: 0.75rem 0.9rem;
+      background: rgba(8, 9, 12, 0.65);
+      border: 1px solid var(--line);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      border-radius: 0.55rem;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .join-field input::placeholder { color: var(--dim); opacity: 0.9; }
+    .join-field input:focus {
+      outline: 2px solid var(--gold-bright);
+      outline-offset: 2px;
+      border-color: var(--line-strong);
+    }
+    .join-form .btn { width: 100%; margin-top: 0.15rem; border-radius: 0.55rem; }
+    .join-form .btn[disabled] {
+      cursor: wait;
+      filter: saturate(0.7);
+      opacity: 0.85;
+    }
+    .join-note {
+      margin-top: 0.15rem;
+      color: var(--dim);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+    .join-status {
+      min-height: 1.3em;
+      margin-top: 0.15rem;
+      font-size: 0.92rem;
+      color: var(--gold);
+    }
+    .join-status.is-error { color: #e8b4b4; }
+    .join-status.is-ok { color: var(--gold-bright); }
+    .join-form.is-done .join-field,
+    .join-form.is-done .btn { display: none; }
+
+    /* ---------- Footer ---------- */
     footer {
-      padding: 1.5rem var(--pad) max(2rem, env(safe-area-inset-bottom));
+      position: relative;
+      z-index: 2;
+      padding: 1.6rem var(--pad) max(2.1rem, env(safe-area-inset-bottom));
       text-align: center;
       color: var(--dim);
       font-size: 0.8rem;
       letter-spacing: 0.04em;
+      background: var(--bg);
     }
     footer .mark {
       display: block;
@@ -376,39 +645,305 @@
       color: var(--gold-deep);
       margin-bottom: 0.25rem;
     }
+    footer .forged-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.85rem;
+      padding: 0.28rem 0.7rem;
+      border: 1px solid rgba(243, 208, 137, 0.22);
+      border-radius: 99px;
+      font-family: var(--font-display);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    footer .forged-badge b {
+      font-weight: 600;
+      color: var(--gold-deep);
+    }
+
+    /* ---------- Reveal ---------- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.is-in,
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 719px) {
+      .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+      .hero-art {
+        position: relative;
+        flex: 0 0 46dvh;
+        height: 46dvh;
+        min-height: 46dvh;
+        max-height: 48dvh;
+        inset: auto;
+      }
+      .hero-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(7, 8, 11, 0.10) 0%, transparent 30%, rgba(7, 8, 11, 0.20) 68%, rgba(7, 8, 11, 0.97) 100%);
+      }
+      .hero-glow {
+        width: 80%;
+        height: 45%;
+        right: -8%;
+        top: 6%;
+      }
+      .hero-shade { display: none; }
+      .hero-content {
+        width: 100%;
+        margin: 0;
+        margin-top: -2.4rem;
+        padding-top: 1.6rem;
+        padding-bottom: max(1.15rem, env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, transparent 0%, var(--bg) 18%);
+        text-align: center;
+        z-index: 2;
+        flex: 1 0 auto;
+      }
+      .logo img { width: min(22.5rem, 92%); }
+      .hero-kicker { margin-bottom: 0.55rem; }
+      .tagline { font-size: clamp(1.28rem, 6.2vw, 1.55rem); }
+      .hero-ctas { margin-top: 0.95rem; gap: 0.55rem; }
+      .hero-ctas .btn { min-height: 3.05rem; }
+      .forged { margin-top: 0.8rem; }
+      .card-badge { margin-top: 0.85rem; }
+    }
 
     @media (min-width: 720px) {
-      :root { --pad: 1.5rem; }
+      :root { --pad: 1.6rem; }
+      .hero {
+        align-items: center;
+      }
+      .hero-art img { object-position: 78% center; }
+      .hero-shade {
+        background:
+          linear-gradient(90deg, rgba(7, 8, 11, 0.88) 0%, rgba(7, 8, 11, 0.55) 34%, rgba(7, 8, 11, 0.12) 58%, rgba(7, 8, 11, 0.35) 100%),
+          linear-gradient(180deg, rgba(7, 8, 11, 0.2) 0%, transparent 28%, rgba(7, 8, 11, 0.55) 100%);
+      }
+      .hero-glow {
+        width: 50%;
+        right: 2%;
+        top: 8%;
+      }
+      .hero-content {
+        width: min(36rem, 46vw);
+        margin: 0;
+        margin-left: max(4vw, calc((100vw - 72rem) / 2));
+        padding: 3.2rem var(--pad) 3rem;
+        text-align: left;
+      }
+      .logo img { margin: 0; }
+      .card-badge { margin-left: 0; }
+      .card-claim-hero { margin-left: 0; margin-right: 0; max-width: 22rem; }
+      .hero-ctas { margin-left: 0; }
+      .hero-kicker { margin-bottom: 1.15rem; }
+      .scroll-hint { display: grid; place-items: center; }
       .rewards li {
-        grid-template-columns: 2.1rem 1fr auto;
+        grid-template-columns: 2.2rem 1fr auto;
         grid-template-areas: "ico name soon";
         align-items: center;
       }
       .rewards .soon { justify-self: end; }
-      body {
-        background:
-          radial-gradient(ellipse 60% 45% at 50% 0%, rgba(184, 137, 58, 0.12), transparent 58%),
-          radial-gradient(circle at 50% 200px, rgba(243, 208, 137, 0.06), transparent 40%),
-          var(--bg);
+      .panel { padding: 1.8rem 1.7rem 1.7rem; }
+      .join-fields {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 0.75rem;
       }
-      .hero { padding-top: 3.2rem; padding-bottom: 2.75rem; }
-      .panel { padding: 1.7rem 1.6rem 1.65rem; }
+    }
+
+    /* ---------- Claim reveal overlay ---------- */
+    .claim-reveal[hidden] { display: none !important; }
+    .claim-reveal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      background: #05060a;
+      color: var(--ink);
+    }
+    .claim-reveal-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .claim-reveal-stage video,
+    .claim-reveal-fallback {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #05060a;
+    }
+    .claim-reveal-stage video {
+      max-height: 100%;
+      max-width: 100%;
+    }
+    .claim-reveal img {
+      max-width: none;
+      height: 100%;
+      width: 100%;
+    }
+    .claim-reveal-fallback {
+      position: absolute;
+      inset: 0;
+      background: #05060a;
+    }
+    .claim-reveal [hidden] { display: none !important; }
+    .claim-reveal-fallback img,
+    .claim-reveal-hold {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .reveal-door { background: #05060a; }
+    .reveal-gold {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .reveal-gold {
+      z-index: 3;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(255, 214, 120, 0.42) 0%, rgba(243, 208, 137, 0.1) 28%, transparent 62%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.2s ease;
+    }
+    .reveal-door { z-index: 2; transition: opacity 1s ease; }
+    .reveal-character {
+      z-index: 3;
+      opacity: 0;
+      transition: opacity 1s ease 0.35s;
+    }
+    .claim-reveal-fallback.is-open .reveal-gold { opacity: 1; }
+    .claim-reveal-fallback.is-open.has-character .reveal-door { opacity: 0; }
+    .claim-reveal-fallback.is-open.has-character .reveal-character { opacity: 1; }
+    .claim-reveal-hold {
+      z-index: 4;
+      background: #05060a;
+    }
+    .claim-reveal-caption {
+      position: absolute;
+      left: 50%;
+      bottom: max(4.5rem, calc(8% + env(safe-area-inset-bottom)));
+      transform: translateX(-50%);
+      width: min(90%, 22rem);
+      margin: 0;
+      text-align: center;
+      font-family: var(--font-flourish);
+      font-style: italic;
+      font-size: clamp(1.35rem, 5vw, 2rem);
+      line-height: 1.25;
+      color: var(--gold-bright);
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      z-index: 5;
+    }
+    .claim-reveal-caption.is-on { opacity: 1; }
+    .claim-reveal-caption strong {
+      display: block;
+      margin-top: 0.15rem;
+      font-family: var(--font-display);
+      font-style: normal;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .claim-reveal-skip {
+      position: absolute;
+      left: 50%;
+      bottom: max(1.1rem, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 6;
+      background: transparent;
+      border: 0;
+      color: var(--gold);
+      font-family: var(--font-display);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    .claim-reveal-skip:hover { color: var(--gold-bright); }
+    .claim-reveal-skip:focus { outline: none; }
+    .claim-reveal-skip:focus-visible {
+      outline: 0;
+      color: var(--gold-bright);
+      text-decoration: underline;
+      text-underline-offset: 0.25em;
+    }
+    body.reveal-lock { overflow: hidden; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .hero-glow, .btn-primary::after, .scroll-hint svg { animation: none; }
+      .hero-glow { opacity: 0.75; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .reveal-door, .reveal-gold, .reveal-character, .claim-reveal-caption { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div class="rings" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
 
   <header class="hero">
-    <div class="wrap">
-      <div class="hero-rule" aria-hidden="true"></div>
+    <picture class="hero-art">
+      <source media="(max-width: 719px)" type="image/webp"
+              srcset="assets/hero-mobile-720.webp 720w, assets/hero-mobile.webp 1080w"
+              sizes="100vw">
+      <source media="(max-width: 719px)" type="image/jpeg"
+              srcset="assets/hero-mobile-720.jpg 720w, assets/hero-mobile.jpg 1080w"
+              sizes="100vw">
+      <source type="image/webp"
+              srcset="assets/hero-desktop-1280.webp 1280w, assets/hero-desktop.webp 1920w"
+              sizes="100vw">
+      <img src="assets/hero-desktop.jpg"
+           width="1920" height="1080"
+           alt="A massive circular vault door stands slightly open, gold light spilling over shelves of collectibles"
+           fetchpriority="high" decoding="async">
+    </picture>
+    <div class="hero-shade" aria-hidden="true"></div>
+    <div class="hero-glow" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <p class="hero-kicker">Vault Collector Cards · 2026</p>
 
       <h1 class="logo">
         <picture>
           <source type="image/webp"
-                  srcset="assets/plaque-700.webp 700w, assets/plaque.webp 1400w"
+                  srcset="assets/plaque-700-clean.webp 700w, assets/plaque-clean.webp 1400w"
                   sizes="(min-width: 700px) 456px, 88vw">
-          <img src="assets/plaque-700.jpg"
+          <img src="assets/plaque-700-clean.png"
                width="700" height="256"
                alt="The Vaulted Shelf">
         </picture>
@@ -417,173 +952,63 @@
       <p class="tagline">One Key <span class="tagline-dots" aria-hidden="true">·</span> One Vault</p>
 
       <p class="card-badge" id="card-badge" hidden></p>
+      <p class="card-claim-hero" id="card-claim-hero" hidden></p>
 
-      <div class="motif" aria-hidden="true">
-        <!-- Vault door + gold key motif -->
-        <svg viewBox="0 0 400 340" role="img" focusable="false">
-          <defs>
-            <radialGradient id="steelFace" cx="38%" cy="32%" r="70%">
-              <stop offset="0%" stop-color="#6a727c"/>
-              <stop offset="38%" stop-color="#3a4148"/>
-              <stop offset="78%" stop-color="#1a1e24"/>
-              <stop offset="100%" stop-color="#0c0e12"/>
-            </radialGradient>
-            <radialGradient id="steelInner" cx="40%" cy="34%" r="70%">
-              <stop offset="0%" stop-color="#4e565e"/>
-              <stop offset="55%" stop-color="#23282e"/>
-              <stop offset="100%" stop-color="#101317"/>
-            </radialGradient>
-            <linearGradient id="goldRing" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#ffe6a8"/>
-              <stop offset="28%" stop-color="#e8c56a"/>
-              <stop offset="62%" stop-color="#c49a3c"/>
-              <stop offset="100%" stop-color="#7a5818"/>
-            </linearGradient>
-            <linearGradient id="goldHi" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#fff3c8"/>
-              <stop offset="40%" stop-color="#e0b65a"/>
-              <stop offset="100%" stop-color="#9a7020"/>
-            </linearGradient>
-            <linearGradient id="keyBody" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#fff1c0"/>
-              <stop offset="25%" stop-color="#f3d089"/>
-              <stop offset="55%" stop-color="#d4af37"/>
-              <stop offset="100%" stop-color="#8a6218"/>
-            </linearGradient>
-            <radialGradient id="hubGold" cx="40%" cy="35%" r="65%">
-              <stop offset="0%" stop-color="#ffe6a8"/>
-              <stop offset="55%" stop-color="#d4af37"/>
-              <stop offset="100%" stop-color="#7a5414"/>
-            </radialGradient>
-            <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
-              <feGaussianBlur stdDeviation="5" result="b"/>
-              <feMerge>
-                <feMergeNode in="b"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-            <filter id="keyGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feGaussianBlur stdDeviation="3.5" result="b"/>
-              <feMerge>
-                <feMergeNode in="b"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-
-          <!-- Soft gold aura behind the door -->
-          <ellipse class="motif-glow" cx="188" cy="162" rx="148" ry="148"
-                   fill="rgba(243,208,137,0.16)"/>
-
-          <!-- Door -->
-          <g transform="translate(188 162)">
-            <!-- Outer gold rim -->
-            <circle r="132" fill="#1a1c20" stroke="url(#goldRing)" stroke-width="10"/>
-            <circle r="124" fill="url(#steelFace)" stroke="rgba(20,14,6,0.6)" stroke-width="1"/>
-            <!-- Bolted mid ring -->
-            <circle r="112" fill="none" stroke="url(#goldRing)" stroke-width="3.2"/>
-            <circle r="102" fill="url(#steelInner)" stroke="#0c0e12" stroke-width="2"/>
-            <!-- Rivets -->
-            <g fill="url(#goldHi)" stroke="#5a4010" stroke-width="0.4">
-              <!-- 16 rivets around r=116 -->
-              <g id="rivetSet">
-                <circle cx="0" cy="-116" r="4.1"/>
-                <circle cx="44.4" cy="-107.1" r="4.1"/>
-                <circle cx="82" cy="-82" r="4.1"/>
-                <circle cx="107.1" cy="-44.4" r="4.1"/>
-                <circle cx="116" cy="0" r="4.1"/>
-                <circle cx="107.1" cy="44.4" r="4.1"/>
-                <circle cx="82" cy="82" r="4.1"/>
-                <circle cx="44.4" cy="107.1" r="4.1"/>
-                <circle cx="0" cy="116" r="4.1"/>
-                <circle cx="-44.4" cy="107.1" r="4.1"/>
-                <circle cx="-82" cy="82" r="4.1"/>
-                <circle cx="-107.1" cy="44.4" r="4.1"/>
-                <circle cx="-116" cy="0" r="4.1"/>
-                <circle cx="-107.1" cy="-44.4" r="4.1"/>
-                <circle cx="-82" cy="-82" r="4.1"/>
-                <circle cx="-44.4" cy="-107.1" r="4.1"/>
-              </g>
-            </g>
-            <!-- Inner track -->
-            <circle r="86" fill="none" stroke="url(#goldRing)" stroke-width="2"/>
-            <circle r="78" fill="none" stroke="rgba(243,208,137,0.18)" stroke-width="6"/>
-            <circle r="68" fill="none" stroke="url(#goldRing)" stroke-width="1.6"/>
-
-            <!-- Spokes -->
-            <g stroke="url(#goldHi)" stroke-width="7" stroke-linecap="round">
-              <line x1="0" y1="-66" x2="0" y2="-28"/>
-              <line x1="0" y1="28" x2="0" y2="66"/>
-              <line x1="-66" y1="0" x2="-28" y2="0"/>
-              <line x1="28" y1="0" x2="66" y2="0"/>
-              <line x1="-46.7" y1="-46.7" x2="-19.8" y2="-19.8"/>
-              <line x1="19.8" y1="19.8" x2="46.7" y2="46.7"/>
-              <line x1="46.7" y1="-46.7" x2="19.8" y2="-19.8"/>
-              <line x1="-19.8" y1="19.8" x2="-46.7" y2="46.7"/>
-            </g>
-            <!-- Spoke roots (darker underlay for depth) -->
-            <g stroke="#1a1408" stroke-width="1.2" stroke-linecap="round" opacity="0.5">
-              <line x1="0" y1="-66" x2="0" y2="-28"/>
-              <line x1="0" y1="28" x2="0" y2="66"/>
-              <line x1="-66" y1="0" x2="-28" y2="0"/>
-              <line x1="28" y1="0" x2="66" y2="0"/>
-            </g>
-
-            <!-- Hub -->
-            <circle r="30" fill="url(#hubGold)" stroke="#5a4010" stroke-width="1.2"/>
-            <circle r="22" fill="#1c1610" stroke="url(#goldRing)" stroke-width="2.2"/>
-            <circle r="16" fill="#0e1014" stroke="rgba(243,208,137,0.35)" stroke-width="1"/>
-            <!-- Keyhole -->
-            <g fill="#07080a">
-              <circle cy="-2.2" r="5.2"/>
-              <path d="M -3.1,0 L -4.6,12.5 Q 0,14.5 4.6,12.5 L 3.1,0 Z"/>
-            </g>
-            <g fill="none" stroke="url(#goldHi)" stroke-width="0.8" opacity="0.7">
-              <circle cy="-2.2" r="5.2"/>
-              <path d="M -3.1,0 L -4.6,12.5 Q 0,14.5 4.6,12.5 L 3.1,0 Z"/>
-            </g>
-          </g>
-
-          <!-- Gold skeleton key, bow as a small vault wheel, bit toward the hub -->
-          <g filter="url(#keyGlow)" transform="translate(214 198) rotate(-32)">
-            <!-- Bow / wheel -->
-            <circle cx="0" cy="0" r="28" fill="#16120c" stroke="url(#keyBody)" stroke-width="5"/>
-            <circle cx="0" cy="0" r="20" fill="none" stroke="url(#goldHi)" stroke-width="1.4"/>
-            <g stroke="url(#keyBody)" stroke-width="2.4" stroke-linecap="round">
-              <line x1="-16" y1="0" x2="16" y2="0"/>
-              <line x1="0" y1="-16" x2="0" y2="16"/>
-              <line x1="-11.3" y1="-11.3" x2="11.3" y2="11.3"/>
-              <line x1="11.3" y1="-11.3" x2="-11.3" y2="11.3"/>
-            </g>
-            <circle cx="0" cy="0" r="6.5" fill="url(#hubGold)" stroke="#5a4010" stroke-width="0.7"/>
-            <!-- Bow rivets -->
-            <g fill="url(#goldHi)">
-              <circle cx="0" cy="-24" r="1.7"/>
-              <circle cx="0" cy="24" r="1.7"/>
-              <circle cx="24" cy="0" r="1.7"/>
-              <circle cx="-24" cy="0" r="1.7"/>
-            </g>
-            <!-- Collar -->
-            <rect x="24" y="-7.5" width="8" height="15" rx="1.2" fill="url(#keyBody)" stroke="#5a4010" stroke-width="0.5"/>
-            <rect x="33" y="-6" width="4.5" height="12" rx="0.8" fill="url(#goldHi)"/>
-            <rect x="38.5" y="-8" width="6" height="16" rx="1" fill="url(#keyBody)" stroke="#5a4010" stroke-width="0.5"/>
-            <!-- Shaft -->
-            <rect x="44" y="-4.2" width="108" height="8.4" rx="2.2" fill="url(#keyBody)" stroke="#5a4010" stroke-width="0.5"/>
-            <!-- Tip cap -->
-            <rect x="148" y="-5.2" width="8" height="10.4" rx="2" fill="url(#goldHi)"/>
-            <!-- Bit -->
-            <path fill="url(#keyBody)" stroke="#5a4010" stroke-width="0.5"
-                  d="M118,-4.2 h12 v14 h10 v7 h-10 v6 h16 v8 h-28
-                     v-8 h10 v-6 h-10 v-7 h10 v-10 h-10 z"/>
-          </g>
-        </svg>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="#join">Join the Vault</a>
+        <a class="btn btn-ghost" id="btn-ebay"
+           href="https://www.ebay.com/sch/i.html?_ssn=the-vaulted-shelf"
+           target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Shop on eBay
+        </a>
       </div>
+
+      <p class="forged">Forged with <span>Ace</span> · 2026</p>
     </div>
+
+    <a class="scroll-hint" href="#found-key" aria-label="Scroll to collector cards">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
   </header>
 
   <main>
     <div class="wrap">
-      <section class="panel" aria-labelledby="found-key-title">
+      <section class="panel claim-panel reveal" id="card-claim" hidden aria-labelledby="claim-title">
+        <div class="panel-corners" aria-hidden="true">
+          <span class="tl"></span><span class="tr"></span>
+          <span class="bl"></span><span class="br"></span>
+        </div>
+        <p class="kicker">Vault Collector Card</p>
+        <h2 id="claim-title">Card</h2>
+        <p class="claim-character" id="claim-character"></p>
+        <p class="claim-edition" id="claim-edition"></p>
+        <p class="claim-by" id="claim-by" hidden></p>
+        <form class="join-form claim-form" id="claim-form" hidden novalidate>
+          <div class="join-fields">
+            <div class="join-field">
+              <label for="claim-code">Claim code</label>
+              <input id="claim-code" name="code" type="text" inputmode="text"
+                     autocomplete="off" autocapitalize="characters" spellcheck="false"
+                     maxlength="12" placeholder="XXXX-XXXX" required>
+            </div>
+            <div class="join-field">
+              <label for="claim-name">Display name</label>
+              <input id="claim-name" name="display_name" type="text" maxlength="32"
+                     autocomplete="nickname" placeholder="Shown as Claimed by…" required>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="claim-submit" type="submit">Claim this card</button>
+          <p class="join-note">The claim code came with your card. Once claimed, this page will show your display name.</p>
+          <p class="join-status" id="claim-msg" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="panel reveal" id="found-key" aria-labelledby="found-key-title">
         <div class="panel-corners" aria-hidden="true">
           <span class="tl"></span><span class="tr"></span>
           <span class="bl"></span><span class="br"></span>
@@ -651,7 +1076,7 @@
         </ul>
       </section>
 
-      <section class="panel" aria-labelledby="founders-title">
+      <section class="panel reveal" aria-labelledby="founders-title">
         <div class="panel-corners" aria-hidden="true">
           <span class="tl"></span><span class="tr"></span>
           <span class="bl"></span><span class="br"></span>
@@ -662,10 +1087,10 @@
         <p><span class="soon">Coming soon</span></p>
       </section>
 
-      <section class="shop" aria-labelledby="shop-title">
+      <section class="shop reveal" aria-labelledby="shop-title">
         <h2 id="shop-title">Shop the vault</h2>
         <div class="btns">
-          <a class="btn btn-primary" id="btn-ebay"
+          <a class="btn btn-primary" id="btn-ebay-footer"
              href="https://www.ebay.com/sch/i.html?_ssn=the-vaulted-shelf"
              target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -675,12 +1100,41 @@
           </a>
         </div>
       </section>
+
+      <section class="panel join reveal" id="join" aria-labelledby="join-title">
+        <div class="panel-corners" aria-hidden="true">
+          <span class="tl"></span><span class="tr"></span>
+          <span class="bl"></span><span class="br"></span>
+        </div>
+        <p class="kicker">Collector list</p>
+        <h2 id="join-title">Join the Vault</h2>
+        <p>First look at drops, auctions, and vault secrets.</p>
+        <form class="join-form" id="join-form" action="#" method="post" novalidate>
+          <div class="join-fields">
+            <div class="join-field">
+              <label for="join-email">Email</label>
+              <input id="join-email" name="email" type="email" inputmode="email"
+                     autocomplete="email" required placeholder="you@email.com">
+            </div>
+            <div class="join-field">
+              <label for="join-name">Name <span class="hint">optional</span></label>
+              <input id="join-name" name="name" type="text" autocomplete="given-name"
+                     placeholder="Your name">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="join-submit" type="submit">
+            Join the Vault
+          </button>
+          <p class="join-note">We only use your email for Vaulted Shelf news. Unsubscribe anytime.</p>
+          <p class="join-status" id="join-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
     </div>
   </main>
 
   <footer>
     <svg class="mark" viewBox="0 0 36 36" aria-hidden="true">
-      <circle cx="18" cy="18" r="16" fill="none" stroke="#b8893a" stroke-width="1.4"/>
+      <circle cx="18" cy="18" r="16" fill="none" stroke="#c49a4a" stroke-width="1.4"/>
       <circle cx="18" cy="18" r="11" fill="none" stroke="#f3d089" stroke-width="1"/>
       <g stroke="#f3d089" stroke-width="1.6" stroke-linecap="round">
         <line x1="18" y1="8.5" x2="18" y2="14"/>
@@ -692,22 +1146,202 @@
     </svg>
     <p class="store">Funko Pops &amp; Collectibles</p>
     <p>The Vaulted Shelf · One Key · One Vault</p>
+    <p class="forged-badge">Forged with <b>Ace</b> · 2026</p>
   </footer>
+
+  <div class="claim-reveal" id="claim-reveal" hidden role="dialog" aria-modal="true" aria-labelledby="claim-reveal-caption">
+    <div class="claim-reveal-stage">
+      <video id="claim-reveal-video" playsinline muted preload="none"></video>
+      <img class="claim-reveal-hold" id="claim-reveal-hold" alt="" hidden>
+      <div class="claim-reveal-fallback" id="claim-reveal-fallback" hidden>
+        <div class="reveal-gold" aria-hidden="true"></div>
+        <img class="reveal-door" src="assets/reveals/door-closed.jpg" alt="">
+        <img class="reveal-character" id="claim-reveal-character" alt="" hidden>
+      </div>
+      <p class="claim-reveal-caption" id="claim-reveal-caption"></p>
+      <button type="button" class="claim-reveal-skip" id="claim-reveal-skip">Tap to skip</button>
+    </div>
+  </div>
 
   <script>
     (function () {
       var cfg = window.VAULT_CONFIG || {};
+      var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      var ebay = document.getElementById("btn-ebay");
-      if (ebay && cfg.ebayShopUrl) {
-        ebay.href = cfg.ebayShopUrl;
+      function playClaimReveal(cardNo, displayName, done) {
+        var overlay = document.getElementById("claim-reveal");
+        var video = document.getElementById("claim-reveal-video");
+        var fallback = document.getElementById("claim-reveal-fallback");
+        var caption = document.getElementById("claim-reveal-caption");
+        var skipBtn = document.getElementById("claim-reveal-skip");
+        var characterImg = document.getElementById("claim-reveal-character");
+        var holdImg = document.getElementById("claim-reveal-hold");
+        var spec = (cfg.reveals && cfg.reveals[cardNo]) || null;
+        var finished = false;
+        var captionShown = false;
+        var captionTimer = 0;
+        var closeTimer = 0;
+
+        function finish() {
+          if (finished) return;
+          finished = true;
+          window.clearTimeout(captionTimer);
+          window.clearTimeout(closeTimer);
+          if (video) {
+            try { video.pause(); } catch (err) {}
+            video.removeAttribute("src");
+            video.querySelectorAll("source").forEach(function (s) { s.remove(); });
+            video.load();
+            video.onended = null;
+            video.onerror = null;
+          }
+          if (overlay) overlay.hidden = true;
+          document.body.classList.remove("reveal-lock");
+          if (typeof done === "function") done();
+        }
+
+        function showCaption() {
+          if (!caption) return;
+          caption.replaceChildren();
+          caption.appendChild(document.createTextNode("Claimed by"));
+          var strong = document.createElement("strong");
+          strong.textContent = displayName || "a collector";
+          caption.appendChild(strong);
+          caption.classList.add("is-on");
+        }
+
+        function endWithCaption() {
+          if (finished) return;
+          if (captionShown) {
+            finish();
+            return;
+          }
+          captionShown = true;
+          if (video && spec && !video.hidden) {
+            try { video.pause(); } catch (err) {}
+          }
+          if (spec && spec.poster && holdImg) {
+            holdImg.src = spec.poster;
+            holdImg.hidden = false;
+            if (video) video.hidden = true;
+          }
+          showCaption();
+          if (skipBtn) skipBtn.textContent = "Tap to close";
+          window.clearTimeout(closeTimer);
+          closeTimer = window.setTimeout(finish, reduceMotion ? 900 : 2200);
+        }
+
+        if (!overlay) {
+          if (typeof done === "function") done();
+          return;
+        }
+
+        if (caption) {
+          caption.classList.remove("is-on");
+          caption.textContent = "";
+        }
+        if (skipBtn) skipBtn.textContent = "Tap to skip";
+        if (fallback) {
+          fallback.hidden = true;
+          fallback.classList.remove("is-open");
+        }
+        if (characterImg) {
+          characterImg.removeAttribute("src");
+          characterImg.hidden = true;
+        }
+        if (holdImg) {
+          holdImg.hidden = true;
+          holdImg.removeAttribute("src");
+        }
+
+        overlay.hidden = false;
+        document.body.classList.add("reveal-lock");
+
+        function startFallback() {
+          if (video) video.hidden = true;
+          if (holdImg) holdImg.hidden = true;
+          if (fallback) {
+            fallback.hidden = false;
+            fallback.classList.remove("has-character");
+            if (spec && spec.poster && characterImg) {
+              characterImg.src = spec.poster;
+              characterImg.hidden = false;
+              fallback.classList.add("has-character");
+            }
+            window.requestAnimationFrame(function () {
+              window.requestAnimationFrame(function () {
+                fallback.classList.add("is-open");
+              });
+            });
+          }
+          var openMs = reduceMotion ? 80 : 1600;
+          captionTimer = window.setTimeout(endWithCaption, openMs);
+        }
+
+        function onSkip() { endWithCaption(); }
+
+        if (skipBtn) {
+          skipBtn.onclick = onSkip;
+        }
+        overlay.onclick = function (event) {
+          if (event.target === skipBtn) return;
+          onSkip();
+        };
+        overlay.onkeydown = function (event) {
+          if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSkip();
+          }
+        };
+
+        if (reduceMotion || !spec) {
+          startFallback();
+          return;
+        }
+
+        if (!video) {
+          startFallback();
+          return;
+        }
+
+        video.hidden = false;
+        video.poster = spec.poster || "";
+        video.querySelectorAll("source").forEach(function (s) { s.remove(); });
+        if (spec.webm) {
+          var webm = document.createElement("source");
+          webm.src = spec.webm;
+          webm.type = "video/webm";
+          video.appendChild(webm);
+        }
+        if (spec.mp4) {
+          var mp4 = document.createElement("source");
+          mp4.src = spec.mp4;
+          mp4.type = "video/mp4";
+          video.appendChild(mp4);
+        }
+        video.onended = endWithCaption;
+        video.onerror = startFallback;
+        video.load();
+        var playAttempt = video.play();
+        if (playAttempt && playAttempt.catch) {
+          playAttempt.catch(function () { startFallback(); });
+        }
       }
+
+      window.__vaultPlayReveal = playClaimReveal;
+
+      var ebayBtns = [document.getElementById("btn-ebay"), document.getElementById("btn-ebay-footer")];
+      ebayBtns.forEach(function (ebay) {
+        if (ebay && cfg.ebayShopUrl) ebay.href = cfg.ebayShopUrl;
+      });
 
       var params = new URLSearchParams(window.location.search);
       var raw = (params.get("card") || "").trim();
       var digits = raw.replace(/\D/g, "").slice(0, 6);
+      var cardNo = "";
       if (digits) {
         var label = digits.length >= 3 ? digits : digits.padStart(3, "0");
+        cardNo = label;
         var badge = document.getElementById("card-badge");
         if (badge) {
           badge.textContent = "Card No. " + label;
@@ -715,6 +1349,309 @@
           badge.classList.add("is-on");
         }
         document.title = "Card No. " + label + " · The Vaulted Shelf";
+      }
+
+      (function initCardClaim() {
+        if (!cardNo) return;
+        var sb = cfg.supabase || {};
+        var panel = document.getElementById("card-claim");
+        var title = document.getElementById("claim-title");
+        var characterEl = document.getElementById("claim-character");
+        var editionEl = document.getElementById("claim-edition");
+        var byEl = document.getElementById("claim-by");
+        var formEl = document.getElementById("claim-form");
+        var msgEl = document.getElementById("claim-msg");
+        var submitBtn = document.getElementById("claim-submit");
+        var heroLine = document.getElementById("card-claim-hero");
+
+        if (title) title.textContent = "Card No. " + cardNo;
+        if (panel) {
+          panel.hidden = false;
+          panel.classList.add("is-in");
+        }
+
+        function setMsg(message, kind) {
+          if (!msgEl) return;
+          msgEl.textContent = message || "";
+          msgEl.classList.remove("is-ok", "is-error");
+          if (kind) msgEl.classList.add(kind);
+        }
+
+        function formatClaimedAt(iso) {
+          if (!iso) return "";
+          try {
+            return new Date(iso).toLocaleDateString("en-US", {
+              timeZone: "America/New_York",
+              month: "long",
+              day: "numeric",
+              year: "numeric"
+            });
+          } catch (err) {
+            return "";
+          }
+        }
+
+        function setHeroLine(html, show) {
+          if (!heroLine) return;
+          if (!show) {
+            heroLine.hidden = true;
+            heroLine.classList.remove("is-on");
+            heroLine.textContent = "";
+            return;
+          }
+          heroLine.innerHTML = html;
+          heroLine.hidden = false;
+          heroLine.classList.add("is-on");
+        }
+
+        function showClaimed(name, whenIso) {
+          var when = formatClaimedAt(whenIso);
+          if (byEl) {
+            byEl.hidden = false;
+            byEl.innerHTML = "Claimed by <strong></strong>" +
+              (when ? '<span class="when"></span>' : "");
+            var strong = byEl.querySelector("strong");
+            if (strong) strong.textContent = name || "a collector";
+            var whenEl = byEl.querySelector(".when");
+            if (whenEl) whenEl.textContent = when;
+          }
+          if (formEl) formEl.hidden = true;
+          setHeroLine("Claimed by " + (name || "a collector"), true);
+        }
+
+        function showUnclaimed() {
+          if (byEl) {
+            byEl.hidden = false;
+            byEl.textContent = "This card is still unclaimed.";
+          }
+          if (formEl) formEl.hidden = false;
+          setHeroLine('Unclaimed · <a href="#card-claim">Claim this card</a>', true);
+        }
+
+        function showUnknown() {
+          if (characterEl) characterEl.textContent = "";
+          if (editionEl) editionEl.textContent = "";
+          if (byEl) {
+            byEl.hidden = false;
+            byEl.textContent = "This card is not in the vault registry yet.";
+          }
+          if (formEl) formEl.hidden = true;
+          setHeroLine("", false);
+        }
+
+        function applyStatus(data) {
+          if (!data || data.found !== true) {
+            showUnknown();
+            return;
+          }
+          if (characterEl) characterEl.textContent = data.character || "";
+          if (editionEl) editionEl.textContent = data.edition || "";
+          if (data.character) {
+            document.title = "Card No. " + cardNo + " · " + data.character + " · The Vaulted Shelf";
+          }
+          if (data.claimed) showClaimed(data.display_name, data.claimed_at);
+          else showUnclaimed();
+        }
+
+        function rpc(name, body) {
+          if (!sb.url || !sb.anonKey) {
+            return Promise.reject(new Error("missing-supabase"));
+          }
+          return fetch(sb.url + "/rest/v1/rpc/" + name, {
+            method: "POST",
+            headers: {
+              "apikey": sb.anonKey,
+              "Authorization": "Bearer " + sb.anonKey,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          }).then(function (res) {
+            return res.json().then(function (payload) {
+              if (!res.ok) {
+                var err = new Error("rpc-failed");
+                err.payload = payload;
+                throw err;
+              }
+              return payload;
+            });
+          });
+        }
+
+        if (byEl) {
+          byEl.hidden = false;
+          byEl.textContent = "Checking this card…";
+        }
+
+        rpc("card_status", { card_no: cardNo }).then(applyStatus).catch(function () {
+          if (byEl) {
+            byEl.hidden = false;
+            byEl.textContent = "We couldn't check this card right now. Please try again in a moment.";
+          }
+          if (formEl) formEl.hidden = true;
+        });
+
+        if (formEl) {
+          formEl.addEventListener("submit", function (event) {
+            event.preventDefault();
+            if (formEl.classList.contains("is-busy")) return;
+            var codeInput = document.getElementById("claim-code");
+            var nameInput = document.getElementById("claim-name");
+            var code = codeInput ? codeInput.value.trim() : "";
+            var name = nameInput ? nameInput.value.trim() : "";
+            if (!code) {
+              setMsg("Please enter the claim code that came with your card.", "is-error");
+              if (codeInput) codeInput.focus();
+              return;
+            }
+            if (!name) {
+              setMsg("Please enter a display name.", "is-error");
+              if (nameInput) nameInput.focus();
+              return;
+            }
+            formEl.classList.add("is-busy");
+            if (submitBtn) {
+              submitBtn.disabled = true;
+              submitBtn.textContent = "Claiming…";
+            }
+            setMsg("Claiming…", "");
+            rpc("claim_card", { card_no: cardNo, code: code, display_name: name }).then(function (result) {
+              formEl.classList.remove("is-busy");
+              if (result && result.ok) {
+                showClaimed(result.display_name, result.claimed_at);
+                setMsg("", "");
+                playClaimReveal(cardNo, result.display_name);
+                return;
+              }
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Claim this card";
+              }
+              var message = (result && result.message) || "Unable to claim this card.";
+              setMsg(message, "is-error");
+            }).catch(function () {
+              formEl.classList.remove("is-busy");
+              if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = "Claim this card";
+              }
+              setMsg("That didn't go through. Please try again in a moment.", "is-error");
+            });
+          });
+        }
+      })();
+
+      var form = document.getElementById("join-form");
+      var statusEl = document.getElementById("join-status");
+      var submitBtn = document.getElementById("join-submit");
+      var ml = cfg.mailerlite || {};
+      var subscribeUrl = ml.subscribeUrl || "";
+
+      function setStatus(message, kind) {
+        if (!statusEl) return;
+        statusEl.textContent = message || "";
+        statusEl.classList.remove("is-ok", "is-error");
+        if (kind) statusEl.classList.add(kind);
+      }
+
+      function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+      }
+
+      function subscribe(email, name) {
+        return new Promise(function (resolve, reject) {
+          if (!subscribeUrl) {
+            reject(new Error("missing-endpoint"));
+            return;
+          }
+          var cbName = "mlJoinCb" + String(Date.now()) + Math.floor(Math.random() * 1000);
+          var settled = false;
+          var script = document.createElement("script");
+          var timer = setTimeout(function () {
+            finish(function () { reject(new Error("timeout")); });
+          }, 12000);
+
+          function finish(fn) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            try { delete window[cbName]; } catch (err) { window[cbName] = undefined; }
+            if (script.parentNode) script.parentNode.removeChild(script);
+            fn();
+          }
+
+          window[cbName] = function (payload) {
+            var ok = !payload || payload.success === true || payload === true ||
+                     (payload.success !== false && !payload.error && !payload.errors);
+            if (ok) finish(function () { resolve(payload || {}); });
+            else finish(function () { reject(payload || new Error("rejected")); });
+          };
+
+          var params = new URLSearchParams();
+          params.set("fields[email]", email);
+          if (name) params.set("fields[name]", name);
+          params.set("ml-submit", "1");
+          params.set("anticsrf", "true");
+          params.set("callback", cbName);
+          script.src = subscribeUrl + (subscribeUrl.indexOf("?") >= 0 ? "&" : "?") + params.toString();
+          script.onerror = function () {
+            finish(function () { reject(new Error("network")); });
+          };
+          document.body.appendChild(script);
+        });
+      }
+
+      if (form) {
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          if (form.classList.contains("is-busy") || form.classList.contains("is-done")) return;
+
+          var emailInput = document.getElementById("join-email");
+          var nameInput = document.getElementById("join-name");
+          var email = emailInput ? emailInput.value.trim() : "";
+          var name = nameInput ? nameInput.value.trim() : "";
+
+          if (!isValidEmail(email)) {
+            setStatus("Please enter a valid email address.", "is-error");
+            if (emailInput) emailInput.focus();
+            return;
+          }
+
+          form.classList.add("is-busy");
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Joining…";
+          }
+          setStatus("Sending…", "");
+
+          subscribe(email, name).then(function () {
+            form.classList.remove("is-busy");
+            form.classList.add("is-done");
+            setStatus("You're in. Welcome to the vault.", "is-ok");
+          }).catch(function () {
+            form.classList.remove("is-busy");
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Join the Vault";
+            }
+            setStatus("That didn't go through. Please try again in a moment.", "is-error");
+          });
+        });
+      }
+
+      var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var blocks = document.querySelectorAll(".reveal");
+      if (reduce || !("IntersectionObserver" in window)) {
+        blocks.forEach(function (el) { el.classList.add("is-in"); });
+      } else {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-in");
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+        blocks.forEach(function (el) { io.observe(el); });
       }
     })();
   </script>

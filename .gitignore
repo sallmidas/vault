@@ -1,0 +1,12 @@
+_preview/
+
+# Secrets — never commit claim codes or env keys
+CLAIM_CODES_PRIVATE.md
+**/CLAIM_CODES_PRIVATE.md
+.env
+.env.*
+*.pem
+service_role*
+
+# Local work files, not for the public site
+_work/
