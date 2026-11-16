@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#08090c">
+  <title>The Vaulted Shelf</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #08090c;
+      color: #f3d089;
+      font-family: Georgia, "Times New Roman", serif;
+      text-align: center;
+    }
+    main { padding: 2rem; }
+    a { color: #ffe6a8; }
+    p { color: #b7b0a2; }
+  </style>
+  <script>
+    (function () {
+      var q = window.location.search || "";
+      var h = window.location.hash || "";
+      window.location.replace("../" + q + h);
+    })();
+  </script>
+</head>
+<body>
+  <main>
+    <h1>The Vaulted Shelf</h1>
+    <p>Opening the vault.</p>
+    <p><a id="fallback" href="../">Continue to The Vaulted Shelf</a></p>
+  </main>
+  <script>
+    (function () {
+      var a = document.getElementById("fallback");
+      if (a) a.href = "../" + (window.location.search || "") + (window.location.hash || "");
+    })();
+  </script>
+</body>
+</html>
