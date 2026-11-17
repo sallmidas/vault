@@ -28,6 +28,17 @@
       return new Date(iso).toLocaleDateString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric" });
     } catch (e) { return ""; }
   }
+  function prettyDate(value) {
+    if (!value) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return fmtDate(value + "T12:00:00-05:00");
+    return fmtDate(value) || value;
+  }
+  function cardMedia(info) {
+    var video = null, song = null;
+    if (info && info.video) video = typeof info.video === "string" ? DATA.videos[info.video] : info.video;
+    if (info && info.song) song = info.song;
+    return { video: video || null, song: song || null };
+  }
   function cardUrl(no) { return BASE + "?card=" + no; }
   function cardInfo(no) { return DATA.cards[no] || null; }
   function setStatus(el, msg, kind) {
@@ -373,7 +384,12 @@
     document.title = "No. " + no + (info ? " · " + info.name : "") + " · The Vaulted Shelf";
 
     var reveal = info && info.reveal && cfg.reveals && cfg.reveals[info.reveal];
-    var video = info && info.video && DATA.videos[info.video];
+    var media = cardMedia(info);
+    var video = media.video;
+    var song = media.song;
+    var dates = [];
+    if (info && info.sold) dates.push("<span>Sold</span> " + esc(prettyDate(info.sold)));
+    if (info && info.shipped) dates.push("<span>Shipped</span> " + esc(prettyDate(info.shipped)));
     var art = info && info.art
       ? '<div class="flip" id="flip"><div class="flip-inner">' +
           '<div class="flip-face front">' + picture(no, "front", "(min-width: 900px) 26rem, 92vw", "", "Card No. " + no + " front", true) + '</div>' +
@@ -389,6 +405,7 @@
         '<h1>' + esc(title) + '</h1>' +
         (info ? '<p class="cp-sub">' + esc([info.line, info.pop, info.tier].filter(Boolean).join(" · ")) + '</p>' : "") +
         (info && info.note ? '<p class="tiny" style="margin-top:.3rem">' + esc(info.note) + '</p>' : "") +
+        (dates.length ? '<ul class="cp-dates">' + dates.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>" : "") +
         '<p class="claim-badge" id="cp-badge" aria-live="polite">Checking the vault…</p>' +
       '</div>' +
       '<div class="cp-grid">' +
@@ -396,10 +413,9 @@
         '<div class="cp-side">' +
           '<section class="vpanel" id="cp-claim" aria-label="Claim this card" hidden></section>' +
           (reveal ? '<section class="vpanel" aria-labelledby="cp-rv"><h2 id="cp-rv">Character reveal</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(reveal.mp4, reveal.poster.replace(/\.jpg$/, ".webp"), "Play the " + title + " reveal", null, reveal.webm) + '</div></section>' : "") +
-          '<section class="vpanel" aria-labelledby="cp-mv"><h2 id="cp-mv">Music video</h2>' +
-            (video ? '<div class="media portrait" style="margin-top:.6rem">' + videoCover(video.src, video.poster, "Play the " + video.title + " music video", video.duration) + '</div>'
-                   : '<div class="slot-empty" style="margin-top:.6rem"><div><strong>Coming to the vault</strong>This card\'s music video is still being forged. <a href="' + BASE + 'videos/">Watch Vault Videos</a></div></div>') +
-          '</section>' +
+          (video ? '<section class="vpanel" aria-labelledby="cp-mv"><h2 id="cp-mv">Music video</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(video.src, video.poster, "Play the " + (video.title || title) + " music video", video.duration) + '</div></section>' : "") +
+          (song ? '<section class="vpanel" aria-labelledby="cp-song"><h2 id="cp-song">' + esc(song.title || "Song") + '</h2><audio class="vault-audio" controls preload="none" src="' + esc(song.src) + '"' + (song.type ? ' type="' + esc(song.type) + '"' : "") + '></audio></section>' : "") +
+          '<section class="vpanel teaser-soon" aria-labelledby="cp-soon"><h2 id="cp-soon">Coming soon from the Vault</h2><p>More collector cards, original videos, and keys to the Founder\'s Collection. Watch this space.</p></section>' +
           '<a class="btn btn-primary" href="' + STORE + '" rel="noopener">Shop on eBay</a>' +
           '<div class="cp-nav">' +
             (prev ? '<a class="btn btn-ghost btn-sm" href="' + cardUrl(prev) + '">← No. ' + prev + '</a>' : "<span></span>") +
