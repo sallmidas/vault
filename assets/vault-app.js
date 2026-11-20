@@ -390,14 +390,38 @@
     var dates = [];
     if (info && info.sold) dates.push("<span>Sold</span> " + esc(prettyDate(info.sold)));
     if (info && info.shipped) dates.push("<span>Shipped</span> " + esc(prettyDate(info.shipped)));
+    // Multi-part story sets (e.g. 017): same front, one back per part ("back", "back2", ...).
+    var parts = (info && info.story && Array.isArray(info.story.parts)) ? info.story.parts : [];
     var art = info && info.art
       ? '<div class="flip" id="flip"><div class="flip-inner">' +
           '<div class="flip-face front">' + picture(no, "front", "(min-width: 900px) 26rem, 92vw", "", "Card No. " + no + " front", true) + '</div>' +
-          '<div class="flip-face back">' + picture(no, "back", "(min-width: 900px) 26rem, 92vw", "", "Card No. " + no + " back") + '</div>' +
+          '<div class="flip-face back">' + picture(no, parts.length ? (parts[0].side || "back") : "back", "(min-width: 900px) 26rem, 92vw", "", "Card No. " + no + " back") + '</div>' +
           '<button class="flip-btn" type="button" aria-label="Flip card"></button></div></div>' +
-        '<div class="flip-controls"><div class="seg" role="group" aria-label="Card side"><button type="button" data-side="front" aria-pressed="true">Front</button><button type="button" data-side="back" aria-pressed="false">Back</button></div></div>' +
-        '<p class="flip-hint">Tap the card to flip it.</p>'
+        '<div class="flip-controls"><div class="seg" role="group" aria-label="Card side"><button type="button" data-side="front" aria-pressed="true">Front</button>' +
+          (parts.length > 1
+            ? parts.map(function (pt, i) { return '<button type="button" data-side="back" data-part="' + i + '" aria-pressed="false">' + esc(pt.label) + '</button>'; }).join("")
+            : '<button type="button" data-side="back" aria-pressed="false">Back</button>') +
+        '</div></div>' +
+        '<p class="flip-hint">' + (parts.length > 1 ? "Two cards, one story. Tap the card to flip it." : "Tap the card to flip it.") + '</p>'
       : '<div class="flip"><div class="flip-inner"><div class="flip-face">' + placeholder(info ? "Card art is being forged" : "Not in the registry yet") + '</div></div></div>';
+
+    var storyHtml = parts.length > 1
+      ? '<section class="vpanel story-panel" aria-labelledby="cp-story"><h2 id="cp-story">' + esc(info.story.title || "The story") + '</h2>' +
+          (info.story.intro ? '<p class="tiny">' + esc(info.story.intro) + '</p>' : "") +
+          '<ol class="story-parts">' + parts.map(function (pt, i) {
+            return '<li><button type="button" class="story-part" data-part="' + i + '" aria-label="Show ' + esc(pt.label) + ' on the card">' +
+              '<span class="sp-thumb"><img src="' + BASE + 'assets/cards/' + no + '-' + esc(pt.side) + '-480.jpg" alt="" loading="lazy" decoding="async" width="480" height="672"></span>' +
+              '<span class="sp-text"><small>' + esc(pt.label) + ' of ' + parts.length + '</small><b>' + esc(pt.title || "") + '</b><span>' + esc(pt.caption || "") + '</span></span></button></li>';
+          }).join("") + '</ol></section>'
+      : "";
+    var sp = info && info.songPending;
+    var songPendingHtml = sp && !song && !video
+      ? '<section class="vpanel song-pending" aria-labelledby="cp-sp"><div class="sp-head"><h2 id="cp-sp">Original song</h2><span class="soon-pill">Coming soon</span></div>' +
+          '<p class="sp-title"><b>' + esc(sp.title) + '</b>' + (sp.artist ? ' <span>by ' + esc(sp.artist) + '</span>' : "") + '</p>' +
+          (sp.blurb ? '<p class="tiny">' + esc(sp.blurb) + '</p>' : "") +
+          (sp.hook && sp.hook.length ? '<blockquote class="sp-hook">' + sp.hook.map(esc).join("<br>") + '</blockquote>' : "") +
+          '<p class="tiny sp-note">' + esc(sp.note || "Still in the studio. It will play right here when it drops.") + '</p></section>'
+      : "";
 
     root.innerHTML =
       '<div class="cp-head">' +
@@ -415,6 +439,7 @@
           (reveal ? '<section class="vpanel" aria-labelledby="cp-rv"><h2 id="cp-rv">Character reveal</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(reveal.mp4, reveal.poster.replace(/\.jpg$/, ".webp"), "Play the " + title + " reveal", null, reveal.webm) + '</div></section>' : "") +
           (video ? '<section class="vpanel" aria-labelledby="cp-mv"><h2 id="cp-mv">Music video</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(video.src, video.poster, "Play the " + (video.title || title) + " music video", video.duration) + '</div></section>' : "") +
           (song ? '<section class="vpanel" aria-labelledby="cp-song"><h2 id="cp-song">' + esc(song.title || "Song") + '</h2><audio class="vault-audio" controls preload="none" src="' + esc(song.src) + '"' + (song.type ? ' type="' + esc(song.type) + '"' : "") + '></audio></section>' : "") +
+          storyHtml + songPendingHtml +
           '<section class="vpanel teaser-soon" aria-labelledby="cp-soon"><h2 id="cp-soon">Coming soon from the Vault</h2><p>More collector cards, original videos, and keys to the Founder\'s Collection. Watch this space.</p></section>' +
           '<a class="btn btn-primary" href="' + STORE + '" rel="noopener">Shop on eBay</a>' +
           '<div class="cp-nav">' +
@@ -424,7 +449,7 @@
         '</div>' +
       '</div>';
 
-    wireFlip(root);
+    wireFlip(root, no, parts);
     wireVideoCovers(root);
 
     var badge = $("#cp-badge", root), claimBox = $("#cp-claim", root);
@@ -482,16 +507,33 @@
       });
     });
   }
-  function wireFlip(root) {
+  function wireFlip(root, no, parts) {
     var flip = $("#flip", root);
     if (!flip) return;
+    parts = parts || [];
     var btns = root.querySelectorAll(".seg button");
+    var backFace = $(".flip-face.back", flip), part = 0;
+    function showPart(i) {
+      if (!parts.length || i === part || !parts[i]) return;
+      part = i;
+      backFace.innerHTML = picture(no, parts[i].side || "back", "(min-width: 900px) 26rem, 92vw", "", "Card No. " + no + " back, " + parts[i].label);
+    }
     function set(side) {
       flip.classList.toggle("is-back", side === "back");
-      btns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.side === side)); });
+      btns.forEach(function (b) {
+        var on = b.dataset.side === side && (side !== "back" || b.dataset.part === undefined || +b.dataset.part === part);
+        b.setAttribute("aria-pressed", String(on));
+      });
+      root.querySelectorAll(".story-part").forEach(function (b) { b.classList.toggle("is-on", side === "back" && +b.dataset.part === part); });
     }
     $(".flip-btn", flip).addEventListener("click", function () { set(flip.classList.contains("is-back") ? "front" : "back"); });
-    btns.forEach(function (b) { b.addEventListener("click", function () { set(b.dataset.side); }); });
+    btns.forEach(function (b) { b.addEventListener("click", function () { if (b.dataset.part !== undefined) showPart(+b.dataset.part); set(b.dataset.side); }); });
+    root.querySelectorAll(".story-part").forEach(function (b) {
+      b.addEventListener("click", function () {
+        showPart(+b.dataset.part); set("back");
+        if (window.matchMedia("(max-width: 899px)").matches) flip.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
   }
 
   // ---------- Home gallery ----------

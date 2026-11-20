@@ -21,7 +21,24 @@ window.VAULT_DATA = {
     "010": { name: "The Nun", line: "WB Horror", pop: "#2062", tier: "Collector", art: true },
     "011": { name: "La Llorona", line: "WB Horror", pop: "#2061", tier: "Collector", art: true },
     "012": { name: "Regan", line: "The Exorcist", pop: "#2058", tier: "Collector", art: true },
-    "013": { name: "Alien Queen", line: "Aliens 35th", pop: "#1171", tier: "Collector", art: true, sold: "2026-11-16", shipped: "2026-11-18" }
+    "013": { name: "Alien Queen", line: "Aliens 35th", pop: "#1171", tier: "Collector", art: true, sold: "2026-11-16", shipped: "2026-11-18" },
+    // 017: two-card story set (buyer gets both). Song not recorded yet: text-only teaser.
+    "017": { name: "Fly Boy Bart", line: "Treehouse of Horror", pop: "#820", tier: "Collector", art: true,
+      note: "Two-card story set · Part 1 and Part 2 ship together",
+      story: {
+        title: "Two cards. One story.",
+        intro: "Fly Boy's card comes as a pair. Read them in order.",
+        parts: [
+          { side: "back", label: "Part 1", title: "The break-in", caption: "One crack of gold light in the vault door, and Fly Boy dives straight for it. Behind him, a shadow with key-shaped ears and one green eye." },
+          { side: "back2", label: "Part 2", title: "The rewind", caption: "Lil' Lockette points her emerald key and turns back time. Green streaks, buzz in reverse, and he's right back where he started." }
+        ]
+      },
+      songPending: {
+        title: "Buzz Kill", artist: "Fly Boy",
+        blurb: "A Halloween-night transporter mix-up left one sugar-crazed kid with a fly's head. Now he buzzes around the shelf trying to squeeze through the vault crack, and every time he gets close, Lockette rewinds him. Only a collector with the right key can let him in.",
+        hook: ["Bzzz, Fly Boy (Fly Boy)", "Buzzin' at the Vault (buzzin' at the Vault)"],
+        note: "Original song by The Vaulted Shelf. Still in the studio. It will play right here when it drops."
+      } }
   },
   // Vault Videos. src paths are relative to the site root.
   videos: {
