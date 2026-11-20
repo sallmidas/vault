@@ -195,7 +195,7 @@
     var cardNo = opts.cardNo || "";
     function render(s) {
       if (!sb) { box.innerHTML = '<p class="vstatus is-error">The vault is offline right now. Please try again soon.</p>'; return; }
-      if (!s.session) return renderSignIn(box, { title: opts.signInTitle || "Sign in to claim", note: opts.signInNote });
+      if (!s.session) return renderSignIn(box, { title: opts.signInTitle || "Sign in to claim", note: opts.signInNote, after: opts.signInAfter, step4: opts.signInStep4 });
       if (!s.profile || !s.profile.handle) return renderHandle(box, { onDone: function () { render(state); } });
       renderClaimForm(box, cardNo, opts);
     }
@@ -217,7 +217,8 @@
         '<div class="vfield"><label for="si-code">6-digit code from the email</label><input id="si-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>' +
         '<button class="btn btn-ghost" type="submit">Sign in with code</button>' +
         '<p class="vstatus" role="status" aria-live="polite"></p></form></div>' +
-      '<ol class="signin-steps"><li>Enter your email.</li><li>Open the link we send (check spam).</li><li>Pick your collector handle.</li></ol>';
+      '<ol class="signin-steps"><li>Enter your email.</li><li>Open the link we send (check spam).</li><li>Pick your collector handle.</li><li>' + esc(o.step4 || "Enter the claim code from your insert.") + '</li></ol>' +
+      (o.after ? '<p class="tiny signin-after">' + esc(o.after) + '</p>' : "");
     var f = $('form[data-k="signin"]', box), st = $(".vstatus", f), btn = $("button", f);
     var codeWrap = $('[data-k="code"]', box);
     var lastEmail = "";
@@ -329,7 +330,8 @@
         if (sw) sw.textContent = "Have a claim code? Use it instead";
       }
     }
-    setMode("code");
+    // Cards that shipped before claim inserts (003–005) open on the order-number path.
+    setMode(!founder && info && info.orderKey ? "order" : "code");
     if (sw) sw.addEventListener("click", function () { setMode(mode === "code" ? "order" : "code"); inp.focus(); });
     // Codes are VS + 6 characters. Normalize by length so a code whose body starts with "VS" still works.
     function tidyCode() {
@@ -475,9 +477,13 @@
       badge.className = "claim-badge" + (founder ? " is-founder" : "");
       badge.innerHTML = VAULT_SVG + "<span>" + (founder ? "Unclaimed — awaiting the Founder claim" : "Unclaimed — waiting in the vault") + "</span>";
       claimBox.hidden = false;
+      var orderKey = !founder && info && info.orderKey;
       claimFlow(claimBox, { cardNo: no, founder: founder,
         signInNote: founder ? "This Founder's card is reserved for the Founder claim. It unlocks once, with the private Founder code."
+                  : orderKey ? "Your order number is your key. Sign in with your email, pick a handle, then enter the eBay order number from your purchase to unlock this card."
                             : "Got this card? Sign in with your email, pick a handle, and unlock it with the claim code from your insert.",
+        signInStep4: founder ? "Enter the private Founder code." : orderKey ? "Enter your eBay order number." : "Enter the claim code from your insert.",
+        signInAfter: orderKey ? "The order-number box appears right after you sign in. Find the number in your eBay purchase history. We check it privately and never show it." : "",
         onClaimed: load });
     }
     function load() {

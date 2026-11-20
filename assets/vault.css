@@ -278,3 +278,4 @@ a.wall-item:hover { border-color: rgba(243,208,137,0.45); }
 }
 .sp-note { margin-top: 0.6rem; }
 @media (prefers-reduced-motion: reduce) { .story-part { transition: none; } }
+.signin-after { margin-top: 0.6rem; color: var(--muted); }
