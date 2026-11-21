@@ -6,7 +6,8 @@
    Optional per-card media (only when a Pop has a song or music video):
      video: "id"                 — key into VAULT_DATA.videos, plays on the claim page
      song:  { title, src, ... }  — optional audio track on the claim page
-   Leave both off when there is no media yet (do not invent a placeholder track).
+     theme: { title, tracks[] }  — "Your Vault Theme" players (Suno embeds + link-out)
+   Leave media off when there is none yet (do not invent a placeholder track).
 */
 window.VAULT_DATA = {
   cards: {
@@ -22,7 +23,16 @@ window.VAULT_DATA = {
     "010": { name: "The Nun", line: "WB Horror", pop: "#2062", tier: "Collector", art: true },
     "011": { name: "La Llorona", line: "WB Horror", pop: "#2061", tier: "Collector", art: true },
     "012": { name: "Regan", line: "The Exorcist", pop: "#2058", tier: "Collector", art: true },
-    "013": { name: "Alien Queen", line: "Aliens 35th", pop: "#1171", tier: "Collector", art: true, sold: "2026-11-16", shipped: "2026-11-18" },
+    "013": { name: "Alien Queen", line: "Aliens 35th", pop: "#1171", tier: "Collector", art: true, sold: "2026-11-16", shipped: "2026-11-18",
+      theme: {
+        title: "Your Vault Theme",
+        tracks: [
+          { label: "Original", title: "Long Live the Queen (Remastered)", artist: "The Vaulted Shelf",
+            sunoId: "886bfaa5-c67b-4ec0-a4e1-35c96308f1ac" },
+          { label: "Trance", title: "Long Live the Queen (Hive Mind Remix)", artist: "The Vaulted Shelf",
+            sunoId: "1cf4663e-5b7f-457a-9b51-63586b558cf7" }
+        ]
+      } },
     // 017: two-card story set (buyer gets both). Song not recorded yet: text-only teaser.
     "017": { name: "Fly Boy Bart", line: "Treehouse of Horror", pop: "#820", tier: "Collector", art: true,
       note: "Two-card story set · Part 1 and Part 2 ship together",

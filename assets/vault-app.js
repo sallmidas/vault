@@ -39,6 +39,33 @@
     if (info && info.song) song = info.song;
     return { video: video || null, song: song || null };
   }
+  function themeTracks(info) {
+    if (!info || !info.theme || !Array.isArray(info.theme.tracks)) return [];
+    return info.theme.tracks;
+  }
+  function themeHtml(info) {
+    var tracks = themeTracks(info);
+    if (!tracks.length) return "";
+    var heading = (info.theme && info.theme.title) || "Your Vault Theme";
+    var items = tracks.map(function (t) {
+      var id = t.sunoId || "";
+      var embed = t.embed || (id ? "https://suno.com/embed/" + id : "");
+      var href = t.href || (id ? "https://suno.com/song/" + id : (t.share || ""));
+      var title = t.title || "Vault theme";
+      var iframe = embed
+        ? '<div class="vt-embed-wrap"><iframe class="vt-embed" title="Play ' + esc(title) + '" src="' + esc(embed) + '" referrerpolicy="strict-origin-when-cross-origin" allow="clipboard-write; encrypted-media; fullscreen"></iframe></div>'
+        : "";
+      var open = href
+        ? '<a class="vt-open" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">Open on Suno</a>'
+        : "";
+      return '<div class="vt-track">' +
+        (t.label ? '<p class="vt-label">' + esc(t.label) + '</p>' : "") +
+        iframe + open +
+        '</div>';
+    }).join("");
+    return '<section class="vpanel vault-theme" aria-labelledby="cp-theme"><h2 id="cp-theme">' + esc(heading) + '</h2>' +
+      '<div class="vt-tracks">' + items + '</div></section>';
+  }
   function cardUrl(no) { return BASE + "?card=" + no; }
   function cardInfo(no) { return DATA.cards[no] || null; }
   function setStatus(el, msg, kind) {
@@ -416,8 +443,9 @@
               '<span class="sp-text"><small>' + esc(pt.label) + ' of ' + parts.length + '</small><b>' + esc(pt.title || "") + '</b><span>' + esc(pt.caption || "") + '</span></span></button></li>';
           }).join("") + '</ol></section>'
       : "";
+    var themeBlock = themeHtml(info);
     var sp = info && info.songPending;
-    var songPendingHtml = sp && !song && !video
+    var songPendingHtml = sp && !song && !video && !themeBlock
       ? '<section class="vpanel song-pending" aria-labelledby="cp-sp"><div class="sp-head"><h2 id="cp-sp">Original song</h2><span class="soon-pill">Coming soon</span></div>' +
           '<p class="sp-title"><b>' + esc(sp.title) + '</b>' + (sp.artist ? ' <span>by ' + esc(sp.artist) + '</span>' : "") + '</p>' +
           (sp.blurb ? '<p class="tiny">' + esc(sp.blurb) + '</p>' : "") +
@@ -441,6 +469,7 @@
           (reveal ? '<section class="vpanel" aria-labelledby="cp-rv"><h2 id="cp-rv">Character reveal</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(reveal.mp4, reveal.poster.replace(/\.jpg$/, ".webp"), "Play the " + title + " reveal", null, reveal.webm) + '</div></section>' : "") +
           (video ? '<section class="vpanel" aria-labelledby="cp-mv"><h2 id="cp-mv">Music video</h2><div class="media portrait" style="margin-top:.6rem">' + videoCover(video.src, video.poster, "Play the " + (video.title || title) + " music video", video.duration) + '</div></section>' : "") +
           (song ? '<section class="vpanel" aria-labelledby="cp-song"><h2 id="cp-song">' + esc(song.title || "Song") + '</h2><audio class="vault-audio" controls preload="none" src="' + esc(song.src) + '"' + (song.type ? ' type="' + esc(song.type) + '"' : "") + '></audio></section>' : "") +
+          themeBlock +
           storyHtml + songPendingHtml +
           '<section class="vpanel teaser-soon" aria-labelledby="cp-soon"><h2 id="cp-soon">Coming soon from the Vault</h2><p>More collector cards, original videos, and keys to the Founder\'s Collection. Watch this space.</p></section>' +
           '<a class="btn btn-primary" href="' + STORE + '" rel="noopener">Shop on eBay</a>' +
