@@ -205,14 +205,27 @@
       else a.textContent = "Sign in";
     });
   }
+  function vaultContactAddr() {
+    return ["vaulted", "shelf"].join("") + "@" + ["gmail", "com"].join(".");
+  }
   function renderFooter() {
     var slot = $("#vfoot-slot");
     if (!slot) return;
+    var fallback = "vaultedshelf [at] gmail [dot] com";
     slot.outerHTML = '<footer class="vfoot"><nav aria-label="Footer">' + NAV.map(function (n) {
       return '<a href="' + n[2] + '">' + n[1] + '</a>';
     }).join("") + '</nav><p>The Vaulted Shelf · One Key · One Vault</p>' +
       '<p class="tiny">Not affiliated with or endorsed by Funko or any rights holder.</p>' +
+      '<p class="vfoot-contact"><span class="vfoot-kicker">Contact the vault</span>' +
+      'For press, collabs and important inquiries.<br>' +
+      '<a class="vfoot-mail" id="vfoot-mail">' + fallback + '</a></p>' +
       '<p class="forged-badge">Forged with <b>Ace</b> · 2026</p></footer>';
+    var mail = $("#vfoot-mail");
+    if (mail) {
+      var addr = vaultContactAddr();
+      mail.setAttribute("href", "mailto:" + addr);
+      mail.textContent = addr;
+    }
   }
 
   // ---------- Claim flow (used on card pages and My Vault) ----------

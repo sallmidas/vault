@@ -211,6 +211,32 @@
 .vfoot nav a { color: var(--muted); text-decoration: none; min-height: 2.2rem; display: inline-flex; align-items: center; }
 .vfoot .forged-badge { margin-top: 0.4rem; color: var(--dim); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
 .vfoot .forged-badge b { color: var(--gold-deep); font-weight: 600; }
+.vfoot .vfoot-contact {
+  margin: 0.85rem auto 0;
+  max-width: 22rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+  color: var(--dim);
+}
+.vfoot .vfoot-kicker {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.vfoot .vfoot-mail {
+  display: inline-block;
+  margin-top: 0.15rem;
+  color: var(--gold-deep);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+.vfoot a.vfoot-mail:hover,
+.vfoot a.vfoot-mail:focus-visible { color: var(--gold-bright); text-decoration: underline; }
 
 /* index additions */
 body.is-card .hero { display: none; }
