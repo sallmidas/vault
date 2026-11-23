@@ -49,7 +49,9 @@ window.VAULT_DATA = {
         blurb: "A Halloween-night transporter mix-up left one sugar-crazed kid with a fly's head. Now he buzzes around the shelf trying to squeeze through the vault crack, and every time he gets close, Lockette rewinds him. Only a collector with the right key can let him in.",
         hook: ["Bzzz, Fly Boy (Fly Boy)", "Buzzin' at the Vault (buzzin' at the Vault)"],
         note: "Original song by The Vaulted Shelf. Still in the studio. It will play right here when it drops."
-      } }
+      } },
+    "018": { name: "Superbad Trio", line: "Superbad", pop: "#175 · #176 · #177", tier: "Collector", art: true },
+    "019": { name: "Chris Mannix", line: "The Hateful Eight", pop: "#258", tier: "Collector", art: true }
   },
   // Vault Videos. src paths are relative to the site root.
   videos: {
