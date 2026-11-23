@@ -108,6 +108,58 @@
       return res.data;
     });
   }
+  // View counters: one count per visitor per America/New_York day.
+  // The only thing sent to the vault is a SHA-256 of (anonymous localStorage
+  // id + page key + date). No IPs or personal data.
+  var VIEW_ID_KEY = "vs_visitor";
+  function nyDate() {
+    try {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit"
+      }).format(new Date());
+    } catch (e) {
+      var d = new Date();
+      return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    }
+  }
+  function visitorId() {
+    var id = "";
+    try { id = localStorage.getItem(VIEW_ID_KEY) || ""; } catch (e) {}
+    if (!id) {
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("v-" + Math.random().toString(36).slice(2) + Date.now().toString(36));
+      try { localStorage.setItem(VIEW_ID_KEY, id); } catch (e) {}
+    }
+    return id;
+  }
+  function sha256Hex(text) {
+    if (!window.crypto || !crypto.subtle) return Promise.reject(new Error("no-crypto"));
+    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+    });
+  }
+  function fmtCount(n) {
+    n = Math.max(0, parseInt(n, 10) || 0);
+    try { return n.toLocaleString("en-US"); } catch (e) { return String(n); }
+  }
+  function recordView(pageKey) {
+    if (!sb) return Promise.resolve(null);
+    return sha256Hex(visitorId() + "|" + pageKey + "|" + nyDate()).then(function (hash) {
+      return rpc("record_vault_view", { page_key: pageKey, visitor_day_hash: hash });
+    }).catch(function () { return null; });
+  }
+  function paintFooterViews(count) {
+    var el = $("#vfoot-views");
+    if (!el || count == null) return;
+    el.hidden = false;
+    el.textContent = fmtCount(count) + (count === 1 ? " visit to the vault" : " visits to the vault");
+  }
+  function bootSiteView() {
+    recordView("site").then(function (r) {
+      if (r && r.ok) paintFooterViews(r.count);
+    });
+  }
 
   var state = { session: null, profile: undefined, ready: false };
   var listeners = [];
@@ -219,6 +271,7 @@
       '<p class="vfoot-contact"><span class="vfoot-kicker">Contact the vault</span>' +
       'For press, collabs and important inquiries.<br>' +
       '<a class="vfoot-mail" id="vfoot-mail">' + fallback + '</a></p>' +
+      '<p class="vfoot-odometer" id="vfoot-views" hidden></p>' +
       '<p class="forged-badge">Forged with <b>Ace</b> · 2026</p></footer>';
     var mail = $("#vfoot-mail");
     if (mail) {
@@ -226,6 +279,7 @@
       mail.setAttribute("href", "mailto:" + addr);
       mail.textContent = addr;
     }
+    bootSiteView();
   }
 
   // ---------- Claim flow (used on card pages and My Vault) ----------
@@ -474,6 +528,7 @@
         (info && info.note ? '<p class="tiny" style="margin-top:.3rem">' + esc(info.note) + '</p>' : "") +
         (dates.length ? '<ul class="cp-dates">' + dates.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>" : "") +
         '<p class="claim-badge" id="cp-badge" aria-live="polite">Checking the vault…</p>' +
+        '<p class="cp-views" id="cp-views" hidden></p>' +
       '</div>' +
       '<div class="cp-grid">' +
         '<div class="cp-art">' + art + '</div>' +
@@ -495,6 +550,12 @@
 
     wireFlip(root, no, parts);
     wireVideoCovers(root);
+    recordView("card:" + no).then(function (r) {
+      var el = $("#cp-views", root);
+      if (!el || !r || !r.ok) return;
+      el.hidden = false;
+      el.textContent = "Viewed " + fmtCount(r.count) + (r.count === 1 ? " time" : " times");
+    });
 
     var badge = $("#cp-badge", root), claimBox = $("#cp-claim", root);
     function paint(d) {
@@ -635,6 +696,21 @@
         '<h2 class="section-title">Waiting in the vault</h2><ul class="cgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">' + waiting.map(function (n) {
           return '<li class="ctile is-sealed"><a href="' + cardUrl(n) + '"><div class="thumb" aria-hidden="true">' + VAULT_SVG + '</div><div class="meta"><div class="no">No. ' + n + '</div><div class="st is-sealed-tag">Awaiting its keeper</div></div></a></li>';
         }).join("") + '</ul></section></div>';
+      rpc("vault_view_stats").then(function (stats) {
+        var cards = (stats && stats.cards) || [];
+        if (!cards.length) return;
+        var top = cards.slice(0, 6);
+        var strip = '<section class="most-viewed" aria-labelledby="w-views"><h2 class="section-title" id="w-views">Most viewed</h2><ul class="mv-strip">' + top.map(function (v) {
+          var no = v.card_no, info = cardInfo(no), claimed = !!claimedSet[no];
+          var views = '<div class="mv-count">Viewed ' + fmtCount(v.count) + (v.count === 1 ? " time" : " times") + '</div>';
+          if (claimed && info) {
+            return '<li class="mv-tile"><a href="' + cardUrl(no) + '"><div class="thumb">' + cardThumb(no, info, "120px") + '</div><div class="meta"><div class="no">No. ' + no + '</div><div class="nm">' + esc(info.name) + '</div>' + views + '</div></a></li>';
+          }
+          return '<li class="mv-tile is-sealed"><a href="' + cardUrl(no) + '"><div class="thumb" aria-hidden="true">' + VAULT_SVG + '</div><div class="meta"><div class="no">No. ' + no + '</div>' + views + '</div></a></li>';
+        }).join("") + '</ul></section>';
+        var statsEl = root.querySelector(".stats");
+        if (statsEl) statsEl.insertAdjacentHTML("afterend", strip);
+      }).catch(function () {});
     });
   }
 

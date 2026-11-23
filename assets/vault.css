@@ -209,6 +209,14 @@
 .vfoot { text-align: center; padding: 1.8rem 1rem max(2rem, env(safe-area-inset-bottom)); color: var(--dim); font-size: 0.8rem; border-top: 1px solid rgba(243,208,137,0.1); }
 .vfoot nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.2rem 1rem; margin-bottom: 0.8rem; }
 .vfoot nav a { color: var(--muted); text-decoration: none; min-height: 2.2rem; display: inline-flex; align-items: center; }
+.vfoot .vfoot-odometer {
+  margin: 0.9rem 0 0.2rem;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
 .vfoot .forged-badge { margin-top: 0.4rem; color: var(--dim); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
 .vfoot .forged-badge b { color: var(--gold-deep); font-weight: 600; }
 .vfoot .vfoot-contact {
@@ -367,4 +375,43 @@ a.wall-item:hover { border-color: rgba(243,208,137,0.45); }
   font-size: 0.64rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+.cp-views {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.most-viewed { margin: 0.4rem 0 0.2rem; }
+.mv-strip {
+  display: flex; gap: 0.7rem; overflow-x: auto; list-style: none;
+  margin: 0; padding: 0 0 0.5rem; scrollbar-width: thin;
+}
+.mv-tile {
+  flex: 0 0 8.4rem; text-align: center;
+}
+.mv-tile a { color: inherit; text-decoration: none; display: block; }
+.mv-tile .thumb {
+  aspect-ratio: 5 / 7; border-radius: 0.55rem; overflow: hidden;
+  border: 1px solid rgba(243, 208, 137, 0.22); background: #0a0b0e;
+}
+.mv-tile .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mv-tile .meta { padding: 0.45rem 0.15rem 0; }
+.mv-tile .no {
+  font-family: var(--font-display); font-size: 0.66rem;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
+}
+.mv-tile .nm { font-size: 0.78rem; color: var(--ink); margin-top: 0.15rem; }
+.mv-tile .mv-count {
+  margin-top: 0.25rem; font-size: 0.72rem; letter-spacing: 0.04em; color: var(--muted);
+}
+#wall .mv-tile.is-sealed .thumb {
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 50% 42%, #2a2418 0%, #0a0b0e 68%);
+}
+#wall .mv-tile.is-sealed .thumb svg {
+  width: 46%; height: auto; color: var(--gold); opacity: 0.92;
+  filter: drop-shadow(0 0 12px rgba(243, 208, 137, 0.28));
 }
