@@ -341,3 +341,30 @@ a.wall-item:hover { border-color: rgba(243,208,137,0.45); }
   font-size: 0.78rem;
   color: var(--gold);
 }
+
+/* Sealed (unclaimed) tiles on the Claimed Wall only. */
+#wall .ctile.is-sealed .thumb {
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 42%, #2a2418 0%, #0a0b0e 68%);
+}
+#wall .ctile.is-sealed .thumb svg {
+  width: 46%;
+  height: auto;
+  color: var(--gold);
+  opacity: 0.92;
+  filter: drop-shadow(0 0 12px rgba(243, 208, 137, 0.28));
+}
+#wall .ctile.is-sealed .st.is-sealed-tag {
+  display: inline-block;
+  margin-top: 0.45rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 208, 137, 0.45);
+  color: var(--gold);
+  background: rgba(12, 12, 10, 0.72);
+  font-family: var(--font-display);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}

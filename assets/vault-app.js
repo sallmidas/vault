@@ -633,8 +633,7 @@
           return '<li class="lb-item"><span class="lb-rank">' + (i + 1) + '</span><span>' + (l.is_handle ? "@" : "") + esc(l.name) + '<br><span class="tiny">since ' + esc(fmtDate(l.first_claim)) + '</span></span><span class="lb-count">' + l.cards + '</span></li>';
         }).join("") + '</ol>' : '<div class="empty-state"><strong>First spot is open</strong>The first collector to claim a card takes No. 1.</div>') +
         '<h2 class="section-title">Waiting in the vault</h2><ul class="cgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">' + waiting.map(function (n) {
-          var c = DATA.cards[n];
-          return '<li class="ctile"><a href="' + cardUrl(n) + '"><div class="thumb">' + cardThumb(n, c, "(min-width: 900px) 9rem, 30vw") + '</div><div class="meta"><div class="no">No. ' + n + '</div><div class="nm" style="font-size:.78rem">' + esc(c.name) + '</div></div></a></li>';
+          return '<li class="ctile is-sealed"><a href="' + cardUrl(n) + '"><div class="thumb" aria-hidden="true">' + VAULT_SVG + '</div><div class="meta"><div class="no">No. ' + n + '</div><div class="st is-sealed-tag">Awaiting its keeper</div></div></a></li>';
         }).join("") + '</ul></section></div>';
     });
   }
