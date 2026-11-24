@@ -17,8 +17,8 @@ window.VAULT_DATA = {
     "004": { name: "Locust Drone", line: "Gears of War", pop: "#117", tier: "Collector", art: true, orderKey: true },
     "005": { name: "Juzo Suzuya", line: "Tokyo Ghoul:re", pop: "#1544", tier: "Collector", art: true, orderKey: true },
     "006": { name: "Carrie", line: "Prom Night", pop: "#467", tier: "Collector", art: true },
-    "007": { name: "Scooby & Shaggy", line: "First Wave", pop: "#149 & #150", tier: "Collector", art: true },
-    "008": { name: "Heffalump", line: "Winnie the Pooh", pop: "#256", tier: "Collector", art: true },
+    "007": { name: "Scooby & Shaggy", line: "First Wave", pop: "#149 & #150", tier: "Collector", art: true, orderKey: true },
+    "008": { name: "Heffalump", line: "Winnie the Pooh", pop: "#256", tier: "Collector", art: true, orderKey: true },
     "009": { name: "Pennywise", line: "IT (1990)", pop: "#2059", tier: "Collector", art: true },
     "010": { name: "The Nun", line: "WB Horror", pop: "#2062", tier: "Collector", art: true },
     "011": { name: "La Llorona", line: "WB Horror", pop: "#2061", tier: "Collector", art: true },
@@ -50,8 +50,8 @@ window.VAULT_DATA = {
         hook: ["Bzzz, Fly Boy (Fly Boy)", "Buzzin' at the Vault (buzzin' at the Vault)"],
         note: "Original song by The Vaulted Shelf. Still in the studio. It will play right here when it drops."
       } },
-    "018": { name: "Superbad Trio", line: "Superbad", pop: "#175 · #176 · #177", tier: "Collector", art: true },
-    "019": { name: "Chris Mannix", line: "The Hateful Eight", pop: "#258", tier: "Collector", art: true }
+    "018": { name: "Superbad Trio", line: "Superbad", pop: "#175 · #176 · #177", tier: "Collector", art: true, orderKey: true },
+    "019": { name: "Chris Mannix", line: "The Hateful Eight", pop: "#258", tier: "Collector", art: true, orderKey: true }
   },
   // Vault Videos. src paths are relative to the site root.
   videos: {

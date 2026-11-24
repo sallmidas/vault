@@ -449,13 +449,13 @@
         help.textContent = founder ? "The private Founder code held by The Vaulted Shelf." : "Under the scratch-off on the claim insert that came with your card.";
         intro.textContent = founder
           ? "This Founder's card is reserved. It's claimed once, with the private Founder code."
-          : "Your private claim code is the key. It's on the sealed insert in your card sleeve, never on the card or in any photo. We check it privately.";
+          : "Enter your claim code or eBay order number. The code is on the sealed insert, never on the card or in any photo. If you didn't get a slip, use your eBay order number. We check it privately.";
         if (sw) sw.textContent = "No claim code? Use your eBay order number";
       } else {
         lab.textContent = "eBay order number";
         inp.placeholder = "12-34567-89012"; inp.setAttribute("inputmode", "numeric"); inp.removeAttribute("autocapitalize");
-        help.textContent = "For cards that shipped before claim codes. Find it in your eBay purchase history.";
-        intro.textContent = "No insert in your sleeve? Cards that shipped before claim codes unlock with the eBay order number. We check it privately and never show it to anyone.";
+        help.textContent = "Enter your claim code or eBay order number. Find the order number in your eBay purchase history. We check it privately.";
+        intro.textContent = "No claim slip in your package? Enter your eBay order number from your purchase. We check it privately and never show it to anyone.";
         if (sw) sw.textContent = "Have a claim code? Use it instead";
       }
     }
