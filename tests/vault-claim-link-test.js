@@ -2,6 +2,8 @@
    Codes below are fake test values, never live claim codes. */
 "use strict";
 var assert = require("assert");
+var fs = require("fs");
+var path = require("path");
 var api = require("../assets/vault-claim-link.js");
 
 var FAKE = "VS-2345-67";
@@ -114,6 +116,34 @@ check("captureAndStrip no-ops when there is no code param", function () {
   assert.strictEqual(result.stripped, false);
   assert.strictEqual(result.hasPending, false);
   assert.strictEqual(api.readPending([store], 1000), null);
+});
+
+check("confirm state is ready for a matching stashed slip, but never auto-submits", function () {
+  var pending = { card: "020", code: FAKE, t: 1000 };
+  var state = api.confirmState(pending, "020");
+  assert.strictEqual(state.ready, true);
+  assert.strictEqual(state.autoSubmit, false);
+  assert.strictEqual(state.hideCode, true);
+  assert.strictEqual(state.buttonLabel, "Claim this card");
+  assert.ok(JSON.stringify(state).indexOf(FAKE) === -1, "confirm state must not echo the code");
+});
+
+check("confirm state is not ready without a matching stash", function () {
+  assert.strictEqual(api.confirmState(null, "020").ready, false);
+  assert.strictEqual(api.confirmState(null, "020").autoSubmit, false);
+  assert.strictEqual(api.confirmState({ card: "021", code: FAKE, t: 1000 }, "020").ready, false);
+  assert.strictEqual(api.confirmState({ card: "021", code: FAKE, t: 1000 }, "020").autoSubmit, false);
+  assert.strictEqual(api.confirmState({ card: "020", code: BAD, t: 1000 }, "020").ready, false);
+});
+
+check("card page must not auto-submit a stashed code", function () {
+  var src = fs.readFileSync(path.join(__dirname, "../assets/vault-app.js"), "utf8");
+  assert.ok(src.indexOf("requestSubmit") === -1, "must not call requestSubmit");
+  assert.ok(src.indexOf("Claiming your card") === -1, "must not auto-claim on load");
+  assert.ok(src.indexOf("autoClaimTried") === -1, "must not keep an auto-claim flag");
+  assert.ok(src.indexOf("Claim this card") !== -1, "must offer a Claim this card confirm button");
+  assert.ok(src.indexOf("Type the code instead") !== -1, "manual typing must still be available");
+  assert.ok(/claim_card_account/.test(src), "claim still goes through the existing account RPC");
 });
 
 if (fails) {

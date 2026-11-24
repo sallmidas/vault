@@ -97,6 +97,20 @@
     return out;
   }
 
+  // UI state for a signed-in collector who arrived from a slip QR.
+  // Never includes the code, and never claims by itself.
+  function confirmState(pending, cardNo) {
+    var card = normalizeCard(cardNo);
+    var code = pending && pending.code ? normalizeCode(pending.code) : "";
+    var ready = !!(pending && pending.card && card && pending.card === card && code);
+    return {
+      ready: ready,
+      autoSubmit: false,
+      hideCode: ready,
+      buttonLabel: ready ? "Claim this card" : ""
+    };
+  }
+
   function captureAndStrip(opts) {
     opts = opts || {};
     var captured = captureFromSearch(opts.search);
@@ -133,6 +147,7 @@
     readPending: readPending,
     clearPending: clearPending,
     defaultStorages: defaultStorages,
+    confirmState: confirmState,
     captureAndStrip: captureAndStrip,
     bootFromLocation: bootFromLocation
   };

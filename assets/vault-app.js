@@ -288,7 +288,6 @@
   }
 
   // ---------- Scan-to-claim (code is stashed by vault-claim-link.js, never logged) ----------
-  var autoClaimTried = {};
   function claimStores() {
     var api = window.__vaultClaimLink;
     return api && api.defaultStorages ? api.defaultStorages() : [];
@@ -319,11 +318,11 @@
       if (!s.session) return renderSignIn(box, {
         title: opts.signInTitle || "Sign in to claim",
         note: scan
-          ? "This link is for your card. Sign in or create an account and we'll add it to your vault."
+          ? "This link is for your card. Sign in or create an account, then tap Claim this card to add it to your vault."
           : opts.signInNote,
         after: opts.signInAfter,
         step4: scan
-          ? "We'll claim the card for you after you sign in. You can also type the code if you need to."
+          ? "Tap Claim this card. Nothing is claimed until you do. You can also type the code if you need to."
           : opts.signInStep4
       });
       if (!s.profile || !s.profile.handle) return renderHandle(box, { onDone: function () { render(state); } });
@@ -462,7 +461,46 @@
     }
     // Cards that shipped before claim inserts (003–005) open on the order-number path.
     setMode(!founder && info && info.orderKey ? "order" : "code");
-    if (sw) sw.addEventListener("click", function () { setMode(mode === "code" ? "order" : "code"); inp.focus(); });
+    var typedInstead = false;
+    function codeField() { return inp.closest ? inp.closest(".vfield") : inp.parentNode; }
+    function showCodeField() {
+      inp.removeAttribute("type");
+      inp.setAttribute("type", "text");
+      var field = codeField();
+      if (field) field.hidden = false;
+    }
+    function applyScanConfirm() {
+      var api = window.__vaultClaimLink;
+      var pending = pendingForCard(cardNo);
+      var confirm = api && api.confirmState ? api.confirmState(pending, cardNo) : { ready: false, autoSubmit: false, hideCode: false, buttonLabel: "" };
+      if (mode === "code" && confirm.ready && !typedInstead) {
+        inp.value = pending.code;
+        tidyCode();
+        inp.setAttribute("type", "hidden");
+        var field = codeField();
+        if (field) field.hidden = true;
+        intro.textContent = "Your claim slip is ready. Tap Claim this card to add it to your vault. Each slip works once.";
+        if (help) help.textContent = "";
+        btn.textContent = confirm.buttonLabel || "Claim this card";
+        if (sw) sw.textContent = "Type the code instead";
+        setStatus(st, "", "");
+        return;
+      }
+      showCodeField();
+    }
+    if (sw) sw.addEventListener("click", function () {
+      if (mode === "code" && !typedInstead && pendingForCard(cardNo)) {
+        typedInstead = true;
+        inp.value = "";
+        showCodeField();
+        setMode("code");
+        inp.focus();
+        return;
+      }
+      setMode(mode === "code" ? "order" : "code");
+      if (mode === "code") applyScanConfirm();
+      inp.focus();
+    });
     // Codes are VS + 6 characters. Normalize by length so a code whose body starts with "VS" still works.
     function tidyCode() {
       if (mode !== "code") return;
@@ -503,19 +541,7 @@
         }
       }).catch(function () { busy(btn, false); setStatus(st, "That didn't go through. Please try again in a moment.", "is-error"); });
     });
-    var pending = pendingForCard(cardNo);
-    if (pending && mode === "code") {
-      inp.value = pending.code;
-      tidyCode();
-      if (!autoClaimTried[cardNo]) {
-        autoClaimTried[cardNo] = true;
-        setStatus(st, "Claiming your card…", "is-ok");
-        setTimeout(function () {
-          if (typeof f.requestSubmit === "function") f.requestSubmit();
-          else f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        }, 0);
-      }
-    }
+    applyScanConfirm();
   }
 
   // ---------- Card page (index.html?card=00X) ----------
