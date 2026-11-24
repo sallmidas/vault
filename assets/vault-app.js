@@ -209,7 +209,12 @@
       state.session = r.data.session; return loadProfile().then(emit);
     });
   }
-  function cleanRedirect() { return location.origin + location.pathname + location.search; }
+  function cleanRedirect() {
+    var path = location.pathname + location.search;
+    var api = window.__vaultClaimLink;
+    if (api && api.stripCodeFromHref) path = api.stripCodeFromHref(path);
+    return location.origin + path;
+  }
 
   // ---------- Nav + footer ----------
   var NAV = [
@@ -282,6 +287,27 @@
     bootSiteView();
   }
 
+  // ---------- Scan-to-claim (code is stashed by vault-claim-link.js, never logged) ----------
+  var autoClaimTried = {};
+  function claimStores() {
+    var api = window.__vaultClaimLink;
+    return api && api.defaultStorages ? api.defaultStorages() : [];
+  }
+  function readPendingClaim() {
+    var api = window.__vaultClaimLink;
+    if (!api || !api.readPending) return null;
+    try { return api.readPending(claimStores(), Date.now()); } catch (e) { return null; }
+  }
+  function clearPendingClaim() {
+    var api = window.__vaultClaimLink;
+    if (!api || !api.clearPending) return;
+    try { api.clearPending(claimStores()); } catch (e) {}
+  }
+  function pendingForCard(cardNo) {
+    var pending = readPendingClaim();
+    return pending && cardNo && pending.card === cardNo ? pending : null;
+  }
+
   // ---------- Claim flow (used on card pages and My Vault) ----------
   // Renders the right step for the current account into `box`.
   function claimFlow(box, opts) {
@@ -289,7 +315,17 @@
     var cardNo = opts.cardNo || "";
     function render(s) {
       if (!sb) { box.innerHTML = '<p class="vstatus is-error">The vault is offline right now. Please try again soon.</p>'; return; }
-      if (!s.session) return renderSignIn(box, { title: opts.signInTitle || "Sign in to claim", note: opts.signInNote, after: opts.signInAfter, step4: opts.signInStep4 });
+      var scan = !!pendingForCard(cardNo);
+      if (!s.session) return renderSignIn(box, {
+        title: opts.signInTitle || "Sign in to claim",
+        note: scan
+          ? "This link is for your card. Sign in or create an account and we'll add it to your vault."
+          : opts.signInNote,
+        after: opts.signInAfter,
+        step4: scan
+          ? "We'll claim the card for you after you sign in. You can also type the code if you need to."
+          : opts.signInStep4
+      });
       if (!s.profile || !s.profile.handle) return renderHandle(box, { onDone: function () { render(state); } });
       renderClaimForm(box, cardNo, opts);
     }
@@ -455,16 +491,31 @@
       rpc("claim_card_account", { card_no: no, order_key: key }).then(function (r) {
         busy(btn, false);
         if (r && r.ok) {
+          clearPendingClaim();
           setStatus(st, r.already_mine ? "This card is already in your vault." : "Unlocked. Card No. " + no + " is yours.", "is-ok");
           var done = function () { if (opts.onClaimed) opts.onClaimed(r); };
           if (!r.already_mine && typeof window.__vaultPlayReveal === "function") window.__vaultPlayReveal(no, "@" + r.handle, done);
           else done();
         } else {
+          clearPendingClaim();
           setStatus(st, (r && r.message) || "Unable to claim this card.", "is-error");
           if (r && r.error === "no_handle") { state.profile = null; emit(); }
         }
       }).catch(function () { busy(btn, false); setStatus(st, "That didn't go through. Please try again in a moment.", "is-error"); });
     });
+    var pending = pendingForCard(cardNo);
+    if (pending && mode === "code") {
+      inp.value = pending.code;
+      tidyCode();
+      if (!autoClaimTried[cardNo]) {
+        autoClaimTried[cardNo] = true;
+        setStatus(st, "Claiming your card…", "is-ok");
+        setTimeout(function () {
+          if (typeof f.requestSubmit === "function") f.requestSubmit();
+          else f.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+        }, 0);
+      }
+    }
   }
 
   // ---------- Card page (index.html?card=00X) ----------

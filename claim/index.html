@@ -23,11 +23,13 @@
     a { color: #ffe6a8; }
     p { color: #b7b0a2; }
   </style>
+  <script src="../assets/vault-claim-link.js"></script>
   <script>
     (function () {
-      var q = window.location.search || "";
-      var h = window.location.hash || "";
-      window.location.replace("../" + q + h);
+      var api = window.__vaultClaimLink;
+      var href = (window.location.search || "") + (window.location.hash || "");
+      var cleaned = api && api.stripCodeFromHref ? api.stripCodeFromHref("/" + href) : ("/" + href);
+      window.location.replace(".." + cleaned);
     })();
   </script>
 </head>
@@ -40,7 +42,12 @@
   <script>
     (function () {
       var a = document.getElementById("fallback");
-      if (a) a.href = "../" + (window.location.search || "") + (window.location.hash || "");
+      if (a) {
+        var api = window.__vaultClaimLink;
+        var href = (window.location.search || "") + (window.location.hash || "");
+        var cleaned = api && api.stripCodeFromHref ? api.stripCodeFromHref("/" + href) : ("/" + href);
+        a.href = ".." + cleaned;
+      }
     })();
   </script>
 </body>
