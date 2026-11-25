@@ -22,6 +22,20 @@
     if (!d || d.length > 3) return "";
     return ("000" + d).slice(-3);
   }
+  function normOrder(raw) {
+    var api = window.__vaultClaimLink;
+    if (api && api.normalizeOrderNumber) return api.normalizeOrderNumber(raw);
+    var s = String(raw == null ? "" : raw).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return (s.length >= 6 && s.length <= 32) ? s : "";
+  }
+  function normZip(raw) {
+    var api = window.__vaultClaimLink;
+    if (api && api.normalizeShippingZip) return api.normalizeShippingZip(raw);
+    var t = String(raw == null ? "" : raw).trim();
+    if (/^[0-9]{5}([- ]?[0-9]{4})?$/.test(t)) return t.replace(/\D/g, "").slice(0, 5);
+    var a = t.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    return (a.length >= 3 && a.length <= 10) ? a : "";
+  }
   function fmtDate(iso) {
     if (!iso) return "";
     try {
@@ -346,7 +360,7 @@
         '<div class="vfield"><label for="si-code">6-digit code from the email</label><input id="si-code" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="123456"></div>' +
         '<button class="btn btn-ghost" type="submit">Sign in with code</button>' +
         '<p class="vstatus" role="status" aria-live="polite"></p></form></div>' +
-      '<ol class="signin-steps"><li>Enter your email.</li><li>Open the link we send (check spam).</li><li>Pick your collector handle.</li><li>' + esc(o.step4 || "Enter the claim code from your insert.") + '</li></ol>' +
+      '<ol class="signin-steps"><li>Enter your email.</li><li>Open the link we send (check spam).</li><li>Pick your collector handle.</li><li>' + esc(o.step4 || "Enter your order number and shipping ZIP.") + '</li></ol>' +
       (o.after ? '<p class="tiny signin-after">' + esc(o.after) + '</p>' : "");
     var f = $('form[data-k="signin"]', box), st = $(".vstatus", f), btn = $("button", f);
     var codeWrap = $('[data-k="code"]', box);
@@ -420,128 +434,231 @@
     });
   }
 
+  function renderClaimSuccess(box, r, opts) {
+    opts = opts || {};
+    var no = normNo(r && r.card_no);
+    var info = no ? cardInfo(no) : null;
+    var title = (r && r.character) || (info && info.name) || ("Card No. " + no);
+    var sub = (r && r.edition) || (info ? [info.line, info.pop, info.tier].filter(Boolean).join(" · ") : "");
+    var handle = (r && r.handle) || (state.profile && state.profile.handle) || "";
+    var thumb = info && info.art
+      ? picture(no, "front", "120px", "", "Card No. " + no + " · " + title)
+      : placeholder("Art coming");
+    box.innerHTML =
+      '<div class="claim-success" role="status" aria-live="polite">' +
+        '<div class="claim-success-thumb">' + thumb + '</div>' +
+        '<div>' +
+          '<p class="claim-success-kicker">' + (r && r.already_mine ? "Already in your vault" : "Added to your vault") + '</p>' +
+          '<h3>No. ' + esc(no) + ' · ' + esc(title) + '</h3>' +
+          (sub ? '<p class="claim-success-sub">' + esc(sub) + '</p>' : '') +
+          '<p class="help" style="margin-top:.45rem">' +
+            (r && r.already_mine
+              ? 'This card is already on your personal page as <strong>@' + esc(handle) + '</strong>.'
+              : 'Claimed by <strong>@' + esc(handle) + '</strong> and saved to your personal page. Each card can be claimed once.') +
+          '</p>' +
+          '<div class="claim-success-actions">' +
+            '<a class="btn btn-primary btn-sm" href="' + cardUrl(no) + '">View card page</a>' +
+            (opts.onAnother ? '<button class="linkish" type="button" data-k="again">Claim another card</button>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    var againBtn = $('[data-k="again"]', box);
+    if (againBtn && opts.onAnother) {
+      againBtn.addEventListener("click", function () { opts.onAnother(); });
+    }
+  }
+
   function renderClaimForm(box, cardNo, opts) {
+    opts = opts || {};
     var info = cardNo ? cardInfo(cardNo) : null;
     var founder = !!(opts && opts.founder);
-    var mode = "code";
-    box.innerHTML =
-      '<h2>' + (founder ? "Founder claim · No. " + cardNo : cardNo ? "Claim Card No. " + cardNo : "Claim a card") + '</h2>' +
-      '<p class="c-intro"></p>' +
-      '<form class="vform" novalidate>' +
-        (cardNo ? "" : '<div class="vfield"><label for="c-no">Card number</label><input id="c-no" inputmode="numeric" maxlength="3" placeholder="013" required value="' + esc(opts.prefill || "") + '"></div>') +
-        '<div class="vfield"><label for="c-key" id="c-key-label">Claim code</label>' +
-        '<input id="c-key" class="code-input" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" required aria-describedby="c-key-help">' +
-        '<p class="help" id="c-key-help"></p></div>' +
-        (founder ? "" : '<button class="linkish c-switch" type="button" aria-controls="c-key"></button>') +
-        '<p class="help">Claiming as <strong>@' + esc(state.profile.handle) + '</strong>. One card, one collector, forever.</p>' +
-        '<button class="btn btn-primary" type="submit">' + (founder ? "Make the Founder claim" : "Claim" + (info ? " " + esc(info.name) : " this card")) + '</button>' +
-        '<p class="vstatus" role="status" aria-live="polite"></p>' +
-      '</form>';
-    var f = $("form", box), st = $(".vstatus", f), btn = $('button[type="submit"]', f);
-    var inp = $("#c-key", box), lab = $("#c-key-label", box), help = $("#c-key-help", box), intro = $(".c-intro", box), sw = $(".c-switch", box);
-    function setMode(m) {
-      mode = m;
-      setStatus(st, "", "");
-      inp.value = "";
-      if (m === "code") {
-        lab.textContent = founder ? "Founder code" : "Claim code";
-        inp.placeholder = "VS-XXXX-XX"; inp.setAttribute("inputmode", "text"); inp.setAttribute("autocapitalize", "characters");
-        help.textContent = founder ? "The private Founder code held by The Vaulted Shelf." : "Under the scratch-off on the claim insert that came with your card.";
-        intro.textContent = founder
-          ? "This Founder's card is reserved. It's claimed once, with the private Founder code."
-          : "Enter your claim code or eBay order number. The code is on the sealed insert, never on the card or in any photo. If you didn't get a slip, use your eBay order number. We check it privately.";
-        if (sw) sw.textContent = "No claim code? Use your eBay order number";
-      } else {
-        lab.textContent = "eBay order number";
-        inp.placeholder = "12-34567-89012"; inp.setAttribute("inputmode", "numeric"); inp.removeAttribute("autocapitalize");
-        help.textContent = "Enter your claim code or eBay order number. Find the order number in your eBay purchase history. We check it privately.";
-        intro.textContent = "No claim slip in your package? Enter your eBay order number from your purchase. We check it privately and never show it to anyone.";
-        if (sw) sw.textContent = "Have a claim code? Use it instead";
+    var scanReady = !founder && !!pendingForCard(cardNo);
+    var mode = (founder || scanReady) ? "code" : "order_zip";
+
+    function paintMode() {
+      if (mode === "order_zip") {
+        box.innerHTML =
+          '<h2>' + (cardNo ? "Claim Card No. " + cardNo : "Claim My Card") + '</h2>' +
+          '<p class="c-intro">Enter the order number from your eBay or Mercari purchase history and your shipping ZIP. We check both privately and never show them.</p>' +
+          '<form class="vform" novalidate data-k="order-zip">' +
+            '<div class="claim-form-row">' +
+              '<div class="vfield"><label for="c-order">Order number</label>' +
+              '<input id="c-order" autocomplete="off" spellcheck="false" maxlength="40" required placeholder="e.g. 12-34567-89012 or m12345678901" aria-describedby="c-order-help">' +
+              '<p class="help" id="c-order-help">From your eBay or Mercari purchase history.</p></div>' +
+              '<div class="vfield"><label for="c-zip">Shipping ZIP</label>' +
+              '<input id="c-zip" inputmode="numeric" autocomplete="postal-code" maxlength="10" required placeholder="12345" aria-describedby="c-zip-help">' +
+              '<p class="help" id="c-zip-help">5-digit shipping ZIP code.</p></div>' +
+            '</div>' +
+            '<p class="help">Claiming as <strong>@' + esc(state.profile.handle) + '</strong>. Each card can be claimed once.</p>' +
+            '<button class="btn btn-primary" type="submit">' + (cardNo ? "Claim" + (info ? " " + esc(info.name) : " this card") : "Claim My Card") + '</button>' +
+            '<p class="vstatus" role="status" aria-live="polite"></p>' +
+            '<button class="linkish c-switch" type="button">Have an older claim code? Use it instead</button>' +
+          '</form>';
+
+        var f = $("form", box), st = $(".vstatus", f), btn = $('button[type="submit"]', f);
+        var orderInp = $("#c-order", box), zipInp = $("#c-zip", box), sw = $(".c-switch", box);
+
+        [orderInp, zipInp].forEach(function (el) {
+          el.addEventListener("input", function () { if (st.textContent) setStatus(st, "", ""); });
+        });
+        sw.addEventListener("click", function () {
+          mode = "code";
+          paintMode();
+          var target = $("#c-no", box) || $("#c-key", box);
+          if (target) target.focus();
+        });
+        f.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var rawOrder = orderInp.value.trim();
+          var rawZip = zipInp.value.trim();
+          if (!normOrder(rawOrder)) {
+            setStatus(st, "Enter your full eBay or Mercari order number.", "is-error");
+            orderInp.focus();
+            return;
+          }
+          if (!normZip(rawZip)) {
+            setStatus(st, "Enter the shipping ZIP code from your order.", "is-error");
+            zipInp.focus();
+            return;
+          }
+          busy(btn, true, "Checking…");
+          setStatus(st, "", "");
+          rpc("claim_card_by_order", {
+            order_number: rawOrder,
+            shipping_zip: rawZip,
+            card_no: cardNo || null
+          }).then(function (r) {
+            busy(btn, false);
+            if (r && r.ok) {
+              orderInp.value = "";
+              zipInp.value = "";
+              var claimedNo = normNo(r.card_no) || cardNo;
+              setStatus(st, r.already_mine ? "This card is already in your vault." : "Unlocked. Card No. " + claimedNo + " is yours.", "is-ok");
+              var done = function () { if (opts.onClaimed) opts.onClaimed(r); };
+              var cInfo = claimedNo ? cardInfo(claimedNo) : null;
+              var hasReveal = !!(cInfo && cInfo.reveal && cfg.reveals && cfg.reveals[cInfo.reveal]);
+              if (!r.already_mine && hasReveal && typeof window.__vaultPlayReveal === "function") {
+                window.__vaultPlayReveal(claimedNo, "@" + r.handle, done);
+              } else {
+                done();
+              }
+            } else {
+              setStatus(st, (r && r.message) || "Unable to claim this card.", "is-error");
+              if (r && r.error === "throttled") {
+                btn.disabled = true;
+                btn.classList.add("is-locked");
+              }
+              if (r && r.error === "no_handle") { state.profile = null; emit(); }
+            }
+          }).catch(function () {
+            busy(btn, false);
+            setStatus(st, "That didn't go through. Please try again in a moment.", "is-error");
+          });
+        });
+        return;
       }
-    }
-    // Cards that shipped before claim inserts (003–005) open on the order-number path.
-    setMode(!founder && info && info.orderKey ? "order" : "code");
-    var typedInstead = false;
-    function codeField() { return inp.closest ? inp.closest(".vfield") : inp.parentNode; }
-    function showCodeField() {
-      inp.removeAttribute("type");
-      inp.setAttribute("type", "text");
-      var field = codeField();
-      if (field) field.hidden = false;
-    }
-    function applyScanConfirm() {
-      var api = window.__vaultClaimLink;
-      var pending = pendingForCard(cardNo);
-      var confirm = api && api.confirmState ? api.confirmState(pending, cardNo) : { ready: false, autoSubmit: false, hideCode: false, buttonLabel: "" };
-      if (mode === "code" && confirm.ready && !typedInstead) {
-        inp.value = pending.code;
-        tidyCode();
-        inp.setAttribute("type", "hidden");
+
+      // Legacy / Founder claim-code path
+      box.innerHTML =
+        '<h2>' + (founder ? "Founder claim · No. " + cardNo : cardNo ? "Claim Card No. " + cardNo : "Claim with an older code") + '</h2>' +
+        '<p class="c-intro"></p>' +
+        '<form class="vform" novalidate>' +
+          (cardNo ? "" : '<div class="vfield"><label for="c-no">Card number</label><input id="c-no" inputmode="numeric" maxlength="3" placeholder="013" required value="' + esc(opts.prefill || "") + '"></div>') +
+          '<div class="vfield"><label for="c-key" id="c-key-label">' + (founder ? "Founder code" : "Claim code") + '</label>' +
+          '<input id="c-key" class="code-input" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="VS-XXXX-XX" required aria-describedby="c-key-help">' +
+          '<p class="help" id="c-key-help"></p></div>' +
+          '<p class="help">Claiming as <strong>@' + esc(state.profile.handle) + '</strong>. Each card can be claimed once.</p>' +
+          '<button class="btn btn-primary" type="submit">' + (founder ? "Make the Founder claim" : "Claim" + (info ? " " + esc(info.name) : " this card")) + '</button>' +
+          '<p class="vstatus" role="status" aria-live="polite"></p>' +
+          (founder ? "" : '<button class="linkish c-switch" type="button" aria-controls="c-key">Use order number + shipping ZIP instead</button>') +
+        '</form>';
+      var cf = $("form", box), cst = $(".vstatus", cf), cbtn = $('button[type="submit"]', cf);
+      var cinp = $("#c-key", box), chelp = $("#c-key-help", box), cintro = $(".c-intro", box), csw = $(".c-switch", box);
+      chelp.textContent = founder ? "The private Founder code held by The Vaulted Shelf." : "For older cards shipped with a sealed VS-XXXX-XX claim code.";
+      cintro.textContent = founder
+        ? "This Founder's card is reserved. It's claimed once, with the private Founder code."
+        : "Have an older card with a sealed claim code? Enter it below.";
+
+      var typedInstead = false;
+      function codeField() { return cinp.closest ? cinp.closest(".vfield") : cinp.parentNode; }
+      function showCodeField() {
+        cinp.removeAttribute("type");
+        cinp.setAttribute("type", "text");
         var field = codeField();
-        if (field) field.hidden = true;
-        intro.textContent = "Your claim slip is ready. Tap Claim this card to add it to your vault. Each slip works once.";
-        if (help) help.textContent = "";
-        btn.textContent = confirm.buttonLabel || "Claim this card";
-        if (sw) sw.textContent = "Type the code instead";
-        setStatus(st, "", "");
-        return;
+        if (field) field.hidden = false;
       }
-      showCodeField();
-    }
-    if (sw) sw.addEventListener("click", function () {
-      if (mode === "code" && !typedInstead && pendingForCard(cardNo)) {
-        typedInstead = true;
-        inp.value = "";
-        showCodeField();
-        setMode("code");
-        inp.focus();
-        return;
+      function tidyCode() {
+        var raw = cinp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        var body = raw.length === 8 && raw.indexOf("VS") === 0 ? raw.slice(2) : raw.length === 6 ? raw : null;
+        if (body) cinp.value = "VS-" + body.slice(0, 4) + "-" + body.slice(4);
       }
-      setMode(mode === "code" ? "order" : "code");
-      if (mode === "code") applyScanConfirm();
-      inp.focus();
-    });
-    // Codes are VS + 6 characters. Normalize by length so a code whose body starts with "VS" still works.
-    function tidyCode() {
-      if (mode !== "code") return;
-      var raw = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      var body = raw.length === 8 && raw.indexOf("VS") === 0 ? raw.slice(2) : raw.length === 6 ? raw : null;
-      if (body) inp.value = "VS-" + body.slice(0, 4) + "-" + body.slice(4);
-    }
-    inp.addEventListener("input", function () {
-      if (st.textContent) setStatus(st, "", "");
-      if (mode !== "code") return;
-      var up = inp.value.toUpperCase();
-      if (up !== inp.value) { var pos = inp.selectionStart; inp.value = up; try { inp.setSelectionRange(pos, pos); } catch (e) {} }
-    });
-    inp.addEventListener("blur", tidyCode);
-    f.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var no = cardNo || normNo($("#c-no", box).value);
-      tidyCode();
-      var key = inp.value.trim();
-      if (!no) { setStatus(st, "Enter the 3-digit card number.", "is-error"); return; }
-      if (mode === "code" && !/^VS-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/.test(key)) {
-        setStatus(st, /[01OIL]/.test(key.replace(/^VS-?/, "")) ? "Claim codes never use 0, O, 1, I or L. Check the letters on your insert." : "Enter the full code, like VS-XXXX-XX.", "is-error"); inp.focus(); return;
-      }
-      if (mode === "order" && key.replace(/\D/g, "").length < 8) { setStatus(st, "Enter your full eBay order number.", "is-error"); inp.focus(); return; }
-      busy(btn, true, "Unlocking…");
-      rpc("claim_card_account", { card_no: no, order_key: key }).then(function (r) {
-        busy(btn, false);
-        if (r && r.ok) {
-          clearPendingClaim();
-          setStatus(st, r.already_mine ? "This card is already in your vault." : "Unlocked. Card No. " + no + " is yours.", "is-ok");
-          var done = function () { if (opts.onClaimed) opts.onClaimed(r); };
-          if (!r.already_mine && typeof window.__vaultPlayReveal === "function") window.__vaultPlayReveal(no, "@" + r.handle, done);
-          else done();
-        } else {
-          clearPendingClaim();
-          setStatus(st, (r && r.message) || "Unable to claim this card.", "is-error");
-          if (r && r.error === "no_handle") { state.profile = null; emit(); }
+      function applyScanConfirm() {
+        var api = window.__vaultClaimLink;
+        var pending = pendingForCard(cardNo);
+        var confirm = api && api.confirmState ? api.confirmState(pending, cardNo) : { ready: false, autoSubmit: false, hideCode: false, buttonLabel: "" };
+        if (confirm.ready && !typedInstead) {
+          cinp.value = pending.code;
+          tidyCode();
+          cinp.setAttribute("type", "hidden");
+          var field = codeField();
+          if (field) field.hidden = true;
+          cintro.textContent = "Your claim slip is ready. Tap Claim this card to add it to your vault. Each slip works once.";
+          if (chelp) chelp.textContent = "";
+          cbtn.textContent = confirm.buttonLabel || "Claim this card";
+          if (csw) csw.textContent = "Type the code instead";
+          setStatus(cst, "", "");
+          return;
         }
-      }).catch(function () { busy(btn, false); setStatus(st, "That didn't go through. Please try again in a moment.", "is-error"); });
-    });
-    applyScanConfirm();
+        showCodeField();
+      }
+      if (csw) csw.addEventListener("click", function () {
+        if (!typedInstead && pendingForCard(cardNo)) {
+          typedInstead = true;
+          cinp.value = "";
+          showCodeField();
+          csw.textContent = "Use order number + shipping ZIP instead";
+          cinp.focus();
+          return;
+        }
+        mode = "order_zip";
+        paintMode();
+        var target = $("#c-order", box);
+        if (target) target.focus();
+      });
+      cinp.addEventListener("input", function () {
+        if (cst.textContent) setStatus(cst, "", "");
+        var up = cinp.value.toUpperCase();
+        if (up !== cinp.value) { var pos = cinp.selectionStart; cinp.value = up; try { cinp.setSelectionRange(pos, pos); } catch (e) {} }
+      });
+      cinp.addEventListener("blur", tidyCode);
+      cf.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var no = cardNo || normNo($("#c-no", box).value);
+        tidyCode();
+        var key = cinp.value.trim();
+        if (!no) { setStatus(cst, "Enter the 3-digit card number.", "is-error"); return; }
+        if (!/^VS-[2-9A-HJKMNP-Z]{4}-[2-9A-HJKMNP-Z]{2}$/.test(key)) {
+          setStatus(cst, /[01OIL]/.test(key.replace(/^VS-?/, "")) ? "Claim codes never use 0, O, 1, I or L. Check the letters on your code." : "Enter the full code, like VS-XXXX-XX.", "is-error"); cinp.focus(); return;
+        }
+        busy(cbtn, true, "Unlocking…");
+        rpc("claim_card_account", { card_no: no, order_key: key }).then(function (r) {
+          busy(cbtn, false);
+          if (r && r.ok) {
+            clearPendingClaim();
+            setStatus(cst, r.already_mine ? "This card is already in your vault." : "Unlocked. Card No. " + no + " is yours.", "is-ok");
+            var done = function () { if (opts.onClaimed) opts.onClaimed(r); };
+            if (!r.already_mine && typeof window.__vaultPlayReveal === "function") window.__vaultPlayReveal(no, "@" + r.handle, done);
+            else done();
+          } else {
+            clearPendingClaim();
+            setStatus(cst, (r && r.message) || "Unable to claim this card.", "is-error");
+            if (r && r.error === "no_handle") { state.profile = null; emit(); }
+          }
+        }).catch(function () { busy(cbtn, false); setStatus(cst, "That didn't go through. Please try again in a moment.", "is-error"); });
+      });
+      applyScanConfirm();
+    }
+    paintMode();
   }
 
   // ---------- Card page (index.html?card=00X) ----------
@@ -657,13 +774,11 @@
       badge.className = "claim-badge" + (founder ? " is-founder" : "");
       badge.innerHTML = VAULT_SVG + "<span>" + (founder ? "Unclaimed — awaiting the Founder claim" : "Unclaimed — waiting in the vault") + "</span>";
       claimBox.hidden = false;
-      var orderKey = !founder && info && info.orderKey;
       claimFlow(claimBox, { cardNo: no, founder: founder,
         signInNote: founder ? "This Founder's card is reserved for the Founder claim. It unlocks once, with the private Founder code."
-                  : orderKey ? "Your order number is your key. Sign in with your email, pick a handle, then enter the eBay order number from your purchase to unlock this card."
-                            : "Got this card? Sign in with your email, pick a handle, and unlock it with the claim code from your insert.",
-        signInStep4: founder ? "Enter the private Founder code." : orderKey ? "Enter your eBay order number." : "Enter the claim code from your insert.",
-        signInAfter: orderKey ? "The order-number box appears right after you sign in. Find the number in your eBay purchase history. We check it privately and never show it." : "",
+                  : "Your order number and shipping ZIP are your key. Sign in with your email, pick a handle, then enter your eBay or Mercari order number and shipping ZIP to unlock this card.",
+        signInStep4: founder ? "Enter the private Founder code." : "Enter your order number and shipping ZIP.",
+        signInAfter: founder ? "" : "Find your order number in your eBay or Mercari purchase history. We check it and your shipping ZIP privately and never show them.",
         onClaimed: load });
     }
     function load() {
@@ -813,6 +928,7 @@
   }
 
   // ---------- My Vault ----------
+  var vaultLastClaimed = null;
   function renderMyVault() {
     var root = $("#myvault");
     if (!root) return;
@@ -823,7 +939,7 @@
       if (!s.session) {
         root.innerHTML = '<section class="vpanel" id="mv-signin"></section>' +
           '<section class="vpanel"><h2>What you get</h2><p>Your own collector handle, every card you claim in one place, your Founder\'s Collection status, and progress on the crack-the-code puzzle.</p></section>';
-        renderSignIn($("#mv-signin"), { title: "Open your vault", note: "Sign in with just your email. We send a one-tap link, no password." });
+        renderSignIn($("#mv-signin"), { title: "Open your vault", note: "Sign in with just your email. We send a one-tap link, no password.", step4: "Enter your order number and shipping ZIP to claim your card." });
         return;
       }
       if (!s.profile || !s.profile.handle) {
@@ -832,7 +948,17 @@
         return;
       }
       root.innerHTML = '<p class="vstatus" role="status">Opening your vault…</p>';
-      rpc("my_vault").then(function (v) { paintVault(root, v, prefill); })
+      rpc("my_vault").then(function (v) {
+        paintVault(root, v, prefill);
+        if (location.hash === "#claim") {
+          var clBox = $("#mv-claim", root);
+          if (clBox) {
+            clBox.scrollIntoView({ behavior: "smooth", block: "start" });
+            var firstInp = $("#c-order", clBox);
+            if (firstInp) try { firstInp.focus({ preventScroll: true }); } catch (e) { firstInp.focus(); }
+          }
+        }
+      })
         .catch(function () { root.innerHTML = '<div class="vpanel"><p class="vstatus is-error">We couldn\'t open your vault. Please refresh.</p></div>'; });
     });
   }
@@ -852,7 +978,7 @@
         (cards.length ? '<ul class="cgrid">' + cards.map(function (c) {
           var info = cardInfo(c.card_no);
           return '<li class="ctile"><a href="' + cardUrl(c.card_no) + '"><div class="thumb">' + cardThumb(c.card_no, info) + '</div><div class="meta"><div class="no">No. ' + esc(c.card_no) + '</div><div class="nm">' + esc(c.character) + '</div><div class="st is-claimed">Claimed ' + esc(fmtDate(c.claimed_at)) + '</div></div></a></li>';
-        }).join("") + '</ul>' : '<div class="empty-state"><strong>Your vault is empty</strong>Claim your first card below with the code from your claim insert.</div>') +
+        }).join("") + '</ul>' : '<div class="empty-state"><strong>Your vault is empty</strong>Claim your first card below with your eBay or Mercari order number and shipping ZIP.</div>') +
       '</section>' +
       '<section class="vpanel" id="mv-claim" style="margin-top:1.2rem"></section>' +
       '<section class="vpanel" aria-labelledby="mv-founder"><h2 id="mv-founder">Founder\'s Collection</h2>' +
@@ -877,7 +1003,28 @@
       renderHandle(box, { onDone: function () { renderMyVaultAgain(); } });
       $("#h-in", box).focus();
     });
-    renderClaimForm($("#mv-claim", root), "", { prefill: prefill, onClaimed: function () { renderMyVaultAgain(); } });
+    var mvClaimBox = $("#mv-claim", root);
+    function mountVaultClaimForm() {
+      renderClaimForm(mvClaimBox, "", {
+        prefill: prefill,
+        onClaimed: function (res) {
+          vaultLastClaimed = res || null;
+          renderMyVaultAgain();
+        }
+      });
+    }
+    if (vaultLastClaimed && vaultLastClaimed.ok) {
+      renderClaimSuccess(mvClaimBox, vaultLastClaimed, {
+        onAnother: function () {
+          vaultLastClaimed = null;
+          mountVaultClaimForm();
+          var firstInp = $("#c-order", mvClaimBox);
+          if (firstInp) firstInp.focus();
+        }
+      });
+    } else {
+      mountVaultClaimForm();
+    }
     var sf = $('form[data-k="sym"]', root);
     if (sf) sf.addEventListener("submit", function (e) {
       e.preventDefault();

@@ -23,6 +23,23 @@
     return "VS-" + body.slice(0, 4) + "-" + body.slice(4);
   }
 
+
+  function normalizeOrderNumber(raw) {
+    var s = String(raw == null ? "" : raw).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (s.length < 6 || s.length > 32) return "";
+    return s;
+  }
+
+  function normalizeShippingZip(raw) {
+    var trimmed = String(raw == null ? "" : raw).trim();
+    if (/^[0-9]{5}([- ]?[0-9]{4})?$/.test(trimmed)) {
+      return trimmed.replace(/\D/g, "").slice(0, 5);
+    }
+    var alnum = trimmed.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (alnum.length < 3 || alnum.length > 10) return "";
+    return alnum;
+  }
+
   function captureFromSearch(search) {
     var params;
     try { params = new URLSearchParams(search || ""); } catch (e) {
@@ -141,6 +158,8 @@
     TTL_MS: TTL_MS,
     normalizeCard: normalizeCard,
     normalizeCode: normalizeCode,
+    normalizeOrderNumber: normalizeOrderNumber,
+    normalizeShippingZip: normalizeShippingZip,
     captureFromSearch: captureFromSearch,
     stripCodeFromHref: stripCodeFromHref,
     writePending: writePending,
