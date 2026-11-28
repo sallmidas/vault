@@ -82,6 +82,25 @@
   }
   function cardUrl(no) { return BASE + "?card=" + no; }
   function cardInfo(no) { return DATA.cards[no] || null; }
+  function cardSeries(no) {
+    var c = cardInfo(no);
+    return (c && c.series) || "original";
+  }
+  function seriesCardNums(no) {
+    var s = cardSeries(no);
+    return Object.keys(DATA.cards).filter(function (n) { return cardSeries(n) === s; }).sort();
+  }
+  function afterDarkNums() {
+    return Object.keys(DATA.cards).filter(function (n) {
+      return cardSeries(n) === "after-dark-1";
+    }).sort(function (a, b) {
+      var ca = DATA.cards[a] || {}, cb = DATA.cards[b] || {};
+      var sa = ca.setNo || 0, sb = cb.setNo || 0;
+      if (sa !== sb) return sa - sb;
+      return String(ca.copy || "").localeCompare(String(cb.copy || ""), undefined, { numeric: true });
+    });
+  }
+
   function setStatus(el, msg, kind) {
     if (!el) return;
     el.textContent = msg || "";
@@ -436,28 +455,49 @@
 
   function renderClaimSuccess(box, r, opts) {
     opts = opts || {};
-    var no = normNo(r && r.card_no);
+    var batch = (r && Array.isArray(r.cards) && r.cards.length) ? r.cards : [{ card_no: r && r.card_no, character: r && r.character, edition: r && r.edition }];
+    var first = batch[0] || {};
+    var no = normNo(first.card_no || (r && r.card_no));
     var info = no ? cardInfo(no) : null;
-    var title = (r && r.character) || (info && info.name) || ("Card No. " + no);
-    var sub = (r && r.edition) || (info ? [info.line, info.pop, info.tier].filter(Boolean).join(" · ") : "");
+    var title = first.character || (r && r.character) || (info && info.name) || ("Card No. " + no);
+    var sub = first.edition || (r && r.edition) || (info ? [info.line, info.pop, info.tier].filter(Boolean).join(" · ") : "");
     var handle = (r && r.handle) || (state.profile && state.profile.handle) || "";
-    var thumb = info && info.art
-      ? picture(no, "front", "120px", "", "Card No. " + no + " · " + title)
-      : placeholder("Art coming");
+    var many = batch.length > 1;
+    var thumbs = batch.map(function (item) {
+      var n = normNo(item.card_no);
+      var inf = n ? cardInfo(n) : null;
+      var nm = item.character || (inf && inf.name) || ("No. " + n);
+      return '<div class="claim-success-thumb">' +
+        (inf && inf.art ? picture(n, "front", "120px", "", "Card No. " + n + " · " + nm) : placeholder("Art coming")) +
+        (many ? '<span class="claim-success-n">No. ' + esc(n) + '</span>' : "") +
+        "</div>";
+    }).join("");
+    var heading = many
+      ? (batch.length + " cards · starting with No. " + esc(no) + " · " + esc(title))
+      : ("No. " + esc(no) + " · " + esc(title));
+    var already = !!(r && r.already_mine);
     box.innerHTML =
       '<div class="claim-success" role="status" aria-live="polite">' +
-        '<div class="claim-success-thumb">' + thumb + '</div>' +
+        (many ? '<div class="claim-success-thumbs">' + thumbs + "</div>" : thumbs) +
         '<div>' +
-          '<p class="claim-success-kicker">' + (r && r.already_mine ? "Already in your vault" : "Added to your vault") + '</p>' +
-          '<h3>No. ' + esc(no) + ' · ' + esc(title) + '</h3>' +
-          (sub ? '<p class="claim-success-sub">' + esc(sub) + '</p>' : '') +
+          '<p class="claim-success-kicker">' + (already ? "Already in your vault" : "Added to your vault") + '</p>' +
+          '<h3>' + heading + '</h3>' +
+          (sub && !many ? '<p class="claim-success-sub">' + esc(sub) + '</p>' : '') +
+          (many ? '<ul class="claim-success-list">' + batch.map(function (item) {
+            var n = normNo(item.card_no);
+            var inf = n ? cardInfo(n) : null;
+            var nm = item.character || (inf && inf.name) || ("Card No. " + n);
+            var ed = item.edition || "";
+            return "<li>No. " + esc(n) + " · " + esc(nm) + (ed ? " · " + esc(ed) : "") + "</li>";
+          }).join("") + "</ul>" : "") +
           '<p class="help" style="margin-top:.45rem">' +
-            (r && r.already_mine
-              ? 'This card is already on your personal page as <strong>@' + esc(handle) + '</strong>.'
-              : 'Claimed by <strong>@' + esc(handle) + '</strong> and saved to your personal page. Each card can be claimed once.') +
-          '</p>' +
+            (already
+              ? (many ? "These cards are already on your personal page as <strong>@" + esc(handle) + "</strong>."
+                      : "This card is already on your personal page as <strong>@" + esc(handle) + "</strong>.")
+              : "Claimed by <strong>@" + esc(handle) + "</strong> and saved to your personal page. Each card can be claimed once.") +
+          "</p>" +
           '<div class="claim-success-actions">' +
-            '<a class="btn btn-primary btn-sm" href="' + cardUrl(no) + '">View card page</a>' +
+            '<a class="btn btn-primary btn-sm" href="' + (many ? (BASE + "vault/") : cardUrl(no)) + '">' + (many ? "Open My Vault" : "View card page") + "</a>" +
             (opts.onAnother ? '<button class="linkish" type="button" data-k="again">Claim another card</button>' : '') +
           '</div>' +
         '</div>' +
@@ -533,7 +573,11 @@
               orderInp.value = "";
               zipInp.value = "";
               var claimedNo = normNo(r.card_no) || cardNo;
-              setStatus(st, r.already_mine ? "This card is already in your vault." : "Unlocked. Card No. " + claimedNo + " is yours.", "is-ok");
+              var nCards = (Array.isArray(r.cards) && r.cards.length) ? r.cards.length : 1;
+              var okMsg = r.already_mine
+                ? (nCards > 1 ? "These cards are already in your vault." : "This card is already in your vault.")
+                : (nCards > 1 ? "Unlocked. " + nCards + " cards are yours." : "Unlocked. Card No. " + claimedNo + " is yours.");
+              setStatus(st, okMsg, "is-ok");
               var done = function () { if (opts.onClaimed) opts.onClaimed(r); };
               var cInfo = claimedNo ? cardInfo(claimedNo) : null;
               var hasReveal = !!(cInfo && cInfo.reveal && cfg.reveals && cfg.reveals[cInfo.reveal]);
@@ -667,7 +711,7 @@
     if (!root) return;
     root.hidden = false;
     var info = cardInfo(no);
-    var nums = Object.keys(DATA.cards).sort();
+    var nums = seriesCardNums(no);
     var idx = nums.indexOf(no);
     var prev = idx > 0 ? nums[idx - 1] : null, next = idx >= 0 && idx < nums.length - 1 ? nums[idx + 1] : null;
     var title = info ? info.name : "Card No. " + no;
@@ -846,11 +890,12 @@
   function renderGallery() {
     var list = $("#card-grid");
     if (!list) return;
-    var nums = Object.keys(DATA.cards).sort();
+    var nums = afterDarkNums();
     list.innerHTML = nums.map(function (no) {
       var c = DATA.cards[no];
+      var tag = c.copy ? (c.copy + " · " + c.tier) : c.tier;
       return '<li class="ctile"><a href="' + cardUrl(no) + '"><div class="thumb">' + cardThumb(no, c) + '</div>' +
-        '<div class="meta"><div class="no">No. ' + no + ' · ' + esc(c.tier) + '</div><div class="nm">' + esc(c.name) + '</div>' +
+        '<div class="meta"><div class="no">No. ' + no + ' · ' + esc(tag) + '</div><div class="nm">' + esc(c.name) + '</div>' +
         '<div class="st" data-no="' + no + '">Waiting in the vault</div></div></a></li>';
     }).join("");
     getWall().then(function (w) {
@@ -870,7 +915,9 @@
       if (!w) { root.innerHTML = '<p class="empty-state">We couldn\'t reach the vault. Please try again soon.</p>'; return; }
       var claimed = w.claims || [], leaders = w.leaders || [];
       var claimedSet = {}; claimed.forEach(function (c) { claimedSet[c.card_no] = 1; });
-      var waiting = Object.keys(DATA.cards).sort().filter(function (n) { return !claimedSet[n]; });
+      var waiting = Object.keys(DATA.cards).sort().filter(function (n) {
+        return cardSeries(n) === "original" && !claimedSet[n];
+      });
       root.innerHTML =
         '<div class="stats"><div class="stat"><b>' + (w.claimed || 0) + '</b><span>Claimed</span></div>' +
         '<div class="stat"><b>' + leaders.length + '</b><span>Collectors</span></div>' +

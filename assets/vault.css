@@ -561,3 +561,22 @@ a.wall-item:hover { border-color: rgba(243,208,137,0.45); }
 .claim-success-actions .linkish {
   margin: 0;
 }
+.claim-success-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.claim-success-n {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--muted, #c8b896);
+  text-align: center;
+}
+.claim-success-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}

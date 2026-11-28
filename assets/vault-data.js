@@ -51,7 +51,24 @@ window.VAULT_DATA = {
         note: "Original song by The Vaulted Shelf. Still in the studio. It will play right here when it drops."
       } },
     "018": { name: "Superbad Trio", line: "Superbad", pop: "#175 · #176 · #177", tier: "Collector", art: true, orderKey: true },
-    "019": { name: "Chris Mannix", line: "The Hateful Eight", pop: "#258", tier: "Collector", art: true, orderKey: true }
+    "019": { name: "Chris Mannix", line: "The Hateful Eight", pop: "#258", tier: "Collector", art: true, orderKey: true },
+
+    // Vault After Dark Set 1 — original mascot cards (post-Mannix design).
+    // series: "after-dark-1" keeps them off the Claimed Wall waiting list
+    // and is the only series shown on the Vault Cards gallery.
+    "020": { name: "Tumbler", line: "Vault After Dark", pop: "Set 1 · #1 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 1, copy: "1/12" },
+    "021": { name: "Lil' Lockette", line: "Vault After Dark", pop: "Set 1 · #2 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 2, copy: "1/12" },
+    "022": { name: "Lil' Lockette", line: "Vault After Dark", pop: "Set 1 · #2 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 2, copy: "2/12" },
+    "023": { name: "Ace the Vault Mind", line: "Vault After Dark", pop: "Set 1 · #3 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 3, copy: "1/12" },
+    "024": { name: "The Vault Queen", line: "Vault After Dark", pop: "Set 1 · #4 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 4, copy: "1/12" },
+    "025": { name: "The Vault Queen", line: "Vault After Dark", pop: "Set 1 · #4 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 4, copy: "2/12" },
+    "026": { name: "Buzzby", line: "Vault After Dark", pop: "Set 1 · #5 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 5, copy: "1/12" },
+    "027": { name: "The Shadow Keeper", line: "Vault After Dark", pop: "Set 1 · #6 · 1/12", tier: "Original", art: true, series: "after-dark-1", setNo: 6, copy: "1/12" },
+    "028": { name: "The Shadow Keeper", line: "Vault After Dark", pop: "Set 1 · #6 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 6, copy: "2/12" },
+    "029": { name: "Tumbler", line: "Vault After Dark", pop: "Set 1 · #1 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 1, copy: "2/12" },
+    "030": { name: "Ace the Vault Mind", line: "Vault After Dark", pop: "Set 1 · #3 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 3, copy: "2/12" },
+    "031": { name: "The Vault Queen", line: "Vault After Dark", pop: "Set 1 · #4 · 3/12", tier: "Original", art: true, series: "after-dark-1", setNo: 4, copy: "3/12" },
+    "032": { name: "Buzzby", line: "Vault After Dark", pop: "Set 1 · #5 · 2/12", tier: "Original", art: true, series: "after-dark-1", setNo: 5, copy: "2/12" }
   },
   // Vault Videos. src paths are relative to the site root.
   videos: {
