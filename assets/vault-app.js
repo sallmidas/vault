@@ -100,6 +100,18 @@
       return String(ca.copy || "").localeCompare(String(cb.copy || ""), undefined, { numeric: true });
     });
   }
+  // Front-page showcase: one tile per mascot (the 1/12 art), not every issued copy.
+  function afterDarkShowcaseNums() {
+    var seen = {}, out = [];
+    afterDarkNums().forEach(function (n) {
+      var c = DATA.cards[n] || {};
+      var k = c.setNo || n;
+      if (seen[k]) return;
+      seen[k] = true;
+      out.push(n);
+    });
+    return out;
+  }
 
   function setStatus(el, msg, kind) {
     if (!el) return;
@@ -890,21 +902,14 @@
   function renderGallery() {
     var list = $("#card-grid");
     if (!list) return;
-    var nums = afterDarkNums();
+    var nums = afterDarkShowcaseNums();
     list.innerHTML = nums.map(function (no) {
       var c = DATA.cards[no];
-      var tag = c.copy ? (c.copy + " · " + c.tier) : c.tier;
+      var setTag = c.setNo ? ("#" + c.setNo) : "";
       return '<li class="ctile"><a href="' + cardUrl(no) + '"><div class="thumb">' + cardThumb(no, c) + '</div>' +
-        '<div class="meta"><div class="no">No. ' + no + ' · ' + esc(tag) + '</div><div class="nm">' + esc(c.name) + '</div>' +
-        '<div class="st" data-no="' + no + '">Waiting in the vault</div></div></a></li>';
+        '<div class="meta"><div class="no">' + esc(setTag) + '</div><div class="nm">' + esc(c.name) + '</div>' +
+        '<div class="st">Limited to 12</div></div></a></li>';
     }).join("");
-    getWall().then(function (w) {
-      if (!w) return;
-      (w.claims || []).forEach(function (c) {
-        var el = list.querySelector('.st[data-no="' + c.card_no + '"]');
-        if (el) { el.textContent = "Claimed by " + (c.is_handle ? "@" : "") + c.name; el.classList.add("is-claimed"); }
-      });
-    });
   }
 
   // ---------- Wall ----------

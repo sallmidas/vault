@@ -99,6 +99,7 @@
 .cgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; list-style: none; }
 @media (min-width: 640px) { .cgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 980px) { .cgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; } }
+@media (min-width: 640px) { .cgrid-showcase { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ctile a { display: block; text-decoration: none; color: inherit; border-radius: 0.8rem; overflow: hidden; background: var(--gun-2); border: 1px solid rgba(243,208,137,0.18); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .ctile a:hover, .ctile a:focus-visible { transform: translateY(-3px); border-color: rgba(243,208,137,0.55); box-shadow: 0 14px 30px rgba(0,0,0,0.45), 0 0 24px rgba(243,208,137,0.12); }
 .ctile .thumb { aspect-ratio: 5 / 7; background: #0a0b0e; position: relative; }
